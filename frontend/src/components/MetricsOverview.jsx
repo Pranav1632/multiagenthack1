@@ -50,7 +50,7 @@ export default function MetricsOverview({ result, isRunning, selectedPreset }) {
             <p className="text-xs text-zinc-400 mt-1 flex items-center gap-1">
               <span className="text-zinc-500 font-mono">Scope:</span>
               <span className="text-zinc-300 font-medium">
-                {selectedPreset?.alert?.project || 'production-cluster'}
+                {result?.project || selectedPreset?.alert?.project || 'production-cluster'}
               </span>
             </p>
           </div>

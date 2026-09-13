@@ -47,7 +47,7 @@ class IncidentOrchestrator:
         commit_list = commits or []
         if not commit_list:
             print(f"[*] [1/5 GATHER] Querying GitHub API for recent commits in {repo}...")
-            commit_list = await self.github.get_recent_commits(repo, since_timestamp=alert.timestamp, limit=10)
+            commit_list = await self.github.get_recent_commits(repo, limit=10)
         print(f"    [1/5 GATHER] Evaluated {len(commit_list)} candidate commits.")
 
         # Step 3: Correlate & Reason

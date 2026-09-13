@@ -73,6 +73,20 @@ async def get_presets():
 # Active SSE subscriber queues for real-time live browser push
 subscribers = set()
 
+@app.get("/api/incident/latest")
+async def get_latest_incident_endpoint():
+    """Retrieve the most recent incident captured by the autonomous engine."""
+    incidents = get_incidents(limit=1)
+    if incidents:
+        raw_json = incidents[0].get("raw_result_json")
+        if raw_json:
+            try:
+                return json.loads(raw_json)
+            except Exception:
+                pass
+        return incidents[0]
+    return JSONResponse(status_code=404, content={"message": "No incidents recorded yet"})
+
 @app.post("/api/webhook/sentry")
 async def sentry_webhook_listener(request: Request):
     """
@@ -85,7 +99,15 @@ async def sentry_webhook_listener(request: Request):
     except Exception:
         raw_body = {}
 
-    repo = settings.GITHUB_DEFAULT_REPO
+    repo = raw_body.get("repo")
+    if not repo:
+        proj = raw_body.get("project") or ""
+        if "payment-microservice-demo" in proj:
+            repo = "Pranav1632/payment-microservice-demo"
+        elif "/" in proj:
+            repo = proj
+        else:
+            repo = settings.GITHUB_DEFAULT_REPO
 
     # Broadcast step updates directly to any open UI dashboard
     async def broadcast_step(step: str, message: str):

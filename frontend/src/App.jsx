@@ -63,6 +63,17 @@ function AppContent() {
       })
       .catch(() => {});
 
+    // Fetch the latest real captured incident from backend SQLite database
+    fetch('/api/incident/latest')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && data.incident_id) {
+          setResult(data);
+          setActiveStep('complete');
+        }
+      })
+      .catch(() => {});
+
     // Listen to live background Sentry webhooks permanently
     const liveSource = new EventSource('/api/stream/live');
     liveSource.onmessage = (e) => {
@@ -382,6 +393,27 @@ function AppContent() {
         {/* View Layouts depending on active tab */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
+            {/* Active Incident Banner */}
+            {result && (
+              <div className="p-4 rounded-lg border border-rose-900/60 bg-rose-950/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="relative flex h-3 w-3 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-white font-mono flex items-center gap-2">
+                      <span>Active Incident: {result.project}</span>
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-rose-900/80 text-rose-200 border border-rose-700">{result.error_type}</span>
+                    </div>
+                    <div className="text-xs text-zinc-400 mt-0.5">
+                      Root cause isolated to commit <code className="text-emerald-400 font-mono font-bold">{result.top_hypothesis?.culprit_sha || 'N/A'}</code> ({Math.round((result.top_hypothesis?.confidence || 0) * 100)}% confidence). Linear ticket <strong className="text-zinc-200 font-mono">{result.linear?.ticket_key}</strong> filed & Slack channel <strong className="text-zinc-200 font-mono">{result.slack?.channel_name}</strong> created.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Step 1: Incident Scenario Trigger */}
             <IncidentTrigger
               presets={presets}
