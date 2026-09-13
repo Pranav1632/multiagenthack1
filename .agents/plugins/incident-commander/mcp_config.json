@@ -1,0 +1,11 @@
+﻿{
+  " mcpServers\: {
+ \incident-commander\: {
+ \command\: \python\,
+ \args\: [\-m\, \incident_commander.mcp.server\],
+ \env\: {
+ \PYTHONPATH\: \.\
+ }
+ }
+ }
+}
