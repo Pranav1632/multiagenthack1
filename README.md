@@ -50,7 +50,7 @@ The following matrix provides judges with complete, verifiable transparency into
 | :--- | :--- | :---: | :--- |
 | **Live Sentry Ingestion** | Real HTTP webhook gateway (`POST /api/webhook/sentry`) with multi-frame stack trace normalization and caller line isolation. | 🟢 **100% Live & Working** | Ingests real Sentry SDK exceptions from external microservices with zero button clicks. |
 | **Neuro-Symbolic Scoring** | Mathematical attribution scoring combining time-decay curves ($\lambda = 0.005$), AST call-stack proximity, and diff line overlap. | 🟢 **100% Live & Working** | Prunes 100+ commits down to top 3 candidates in **$< 40\text{ms}$** (verified via `test_benchmark_latency.py`). |
-| **Local Neural Reasoner** | Zero-egress local inference using fine-tuned **Qwen 2.5 (3B)** via Ollama to evaluate code diff semantics and author intent. | 🟢 **100% Live & Working** | Operates 100% on-premise without cloud API costs or data leaks; isolates commit `539fce1` with 65% calibrated confidence. |
+| **Local Neural Reasoner** | Zero-egress local inference using fine-tuned **Qwen 2.5 (3B)** via Ollama to evaluate code diff semantics and author intent. | 🟢 **100% Live & Working** | Operates 100% on-premise without cloud API costs or data leaks; isolates commit `539fce1` with 65% calibrated confidence. *(Model-agnostic: pluggable to Claude, GPT-4o, Gemini, or DeepSeek).* |
 | **"Don't Guess" Outage Guard** | Confidence calibration threshold guard ($\tau = 0.65$) that detects external cloud outages (AWS RDS, Stripe, Redis). | 🟢 **100% Live & Working** | Flags cloud outages at 18% confidence and **strictly suppresses automated code rollbacks**, preventing false reverts. |
 | **Slack War-Room Orchestrator** | Asynchronous Slack connector generating dynamic timestamped channels (`#inc-MMDD-HHMM-...`) and posting interactive BlockKit briefings. | 🟢 **100% Live & Working** | Live on `incident-app.slack.com` with pinned incident cards, blast radius tags, and 1-click rollback CTA buttons. |
 | **Linear P0 Ticket Dispatcher** | Direct GraphQL mutation client (`api.linear.app/graphql`) querying team keys and creating structured P0 Urgent issues. | 🟢 **100% Live & Working** | Files real P0 issues under team `PRA` in `linear.app/pranav1632` containing diagnostic stack traces and `git revert` commands. |
@@ -392,15 +392,17 @@ $$S(c, A) = w_t \cdot S_{\text{time}}(c, A) + w_p \cdot S_{\text{path}}(c, A) + 
 
 ---
 
-### Component 4: Local Neural Reasoner (`qwen_reasoner.py`)
+### Component 4: Neural Semantic Reasoner (`qwen_reasoner.py`)
 
-- **100% Local Inference**: Runs locally via Ollama with `qwen2.5:3b`. No proprietary source code or stack traces are ever transmitted over external networks.
+- **Local Inference by Default (Zero Cloud Data Leaks)**: Currently runs locally via Ollama with `qwen2.5:3b`. No proprietary source code, git diffs, or internal stack traces are ever transmitted over external networks.
+- **Model-Agnostic Architecture (Any Cloud LLM Compatible)**: While local Ollama is configured by default for zero data egress and zero API cost, the reasoning engine is 100% provider-agnostic. Any cloud LLM (e.g. **Anthropic Claude 3.5 Sonnet**, **OpenAI GPT-4o**, **Google Gemini 2.0 Flash / Pro**, **DeepSeek V3**, **Groq**, or **AWS Bedrock**) can be attached seamlessly via standard OpenAI-compatible REST API, LiteLLM, or native provider SDKs with zero code refactoring.
 - **Structured JSON Schema**: Prompts the model with strict JSON formatting rules to output:
   - `culprit_sha`: The 7-character commit SHA.
   - `confidence`: Calibrated float between `0.0` and `1.0`.
   - `hypothesis`: 1–2 sentence explanation of why the commit caused the crash.
   - `evidence`: File path, line number, and exact code modification that induced the crash.
   - `surgical_patch`: Exact git revert command or replacement snippet.
+  - `needs_human_review` & `is_external_outage`: Boolean guard flags for safe downstream automation.
 
 ---
 
@@ -634,9 +636,15 @@ LINEAR_API_KEY=lin_api_your_linear_api_key_here
 LINEAR_TEAM_ID=PRA
 LINEAR_WORKSPACE=pranav1632
 
-# Local LLM Inference (Zero Cloud Data Leaks)
+# LLM Inference (Local Ollama default for zero data egress, or attach any Cloud LLM)
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=qwen2.5:3b
+
+# Optional Cloud LLM Attachment (e.g. OpenAI / Anthropic / Gemini / Groq / LiteLLM)
+# CLOUD_LLM_PROVIDER=openai # or anthropic / gemini / litellm
+# OPENAI_API_KEY=sk-...
+# ANTHROPIC_API_KEY=sk-ant-...
+# GEMINI_API_KEY=AIza...
 
 # Sentry Cloud Integration (Optional Webhook Tunnel)
 SENTRY_CLIENT_SECRET=your_sentry_client_secret_here
@@ -1137,6 +1145,7 @@ Incident Commander was engineered not as an ephemeral wrapper, but as an enterpr
 #### 2. Zero-Cost Economic Feasibility vs Cloud LLMs
 - **Cloud API Cost (GPT-4o / Claude 3.5 Sonnet)**: At an average of 50,000 tokens per incident (including full commit diffs and multi-frame stack traces) across 25 production incidents per week, cloud API costs exceed **$\$800–\$1,400\text{/month}$**, subject to unexpected rate limits during massive production outages.
 - **Incident Commander Economics**: **$\$0\text{ marginal cost}$**. By offloading token-heavy pruning to deterministic AST algorithms and local neural reasoning to fine-tuned Qwen 2.5, enterprise operating costs are virtually zero.
+- **Pluggable Multi-Model Flexibility**: While local Ollama is the zero-cost default for privacy and independence, the system is completely provider-agnostic. Organizations can effortlessly attach any enterprise cloud LLM (Anthropic Claude 3.5 Sonnet, OpenAI GPT-4o, Google Gemini 2.0, or AWS Bedrock) for complex multi-repo investigations simply by configuring provider API keys.
 
 #### 3. Zero-Egress Security & Enterprise Compliance
 - **Zero Proprietary Code Egress**: Neither source code, proprietary git diffs, nor internal stack traces ever cross corporate network boundaries.
