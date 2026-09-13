@@ -34,8 +34,15 @@ class SentryParser(BaseSentryParser):
         culprit = raw_data.get("culprit")
         timestamp = raw_data.get("timestamp") or datetime.now(timezone.utc).isoformat()
 
-        # Check standard Sentry event structure
-        exception = raw_data.get("exception", {})
+        # Check standard Sentry event structure (and nested data.event in Sentry webhook notifications)
+        event_data = raw_data.get("data", {}).get("event", {}) if "data" in raw_data else raw_data
+        if not alert_id or alert_id.startswith("alert-"):
+            alert_id = event_data.get("event_id") or event_data.get("id") or alert_id
+
+        if project == "unknown-service":
+            project = raw_data.get("data", {}).get("issue", {}).get("project", {}).get("name") or event_data.get("project") or project
+
+        exception = event_data.get("exception", {})
         if isinstance(exception, dict):
             values = exception.get("values", [])
             if values and isinstance(values, list):
