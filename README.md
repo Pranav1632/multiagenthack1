@@ -2,6 +2,7 @@
 ### Autonomous AI Incident Investigation, Root-Cause Correlation & Multi-App Response
 *Multi-App AI Agent Hackathon — Complete Judge's Guide & Master Whitepaper*
 
+[![Demo Video](https://img.shields.io/badge/Demo%20Video-Watch%20on%20YouTube-red?logo=youtube)](https://youtu.be/WlpG-3ws2IA)
 [![Status: Production Ready](https://img.shields.io/badge/Status-Production%20Ready-success.svg)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](#)
 [![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph%20State%20Machine-orange.svg)](#)
@@ -9,6 +10,9 @@
 [![Top-1 Accuracy](https://img.shields.io/badge/Benchmark%20Accuracy-100%25%20Top--1-brightgreen.svg)](#)
 [![MRR](https://img.shields.io/badge/MRR-1.000-brightgreen.svg)](#)
 [![Multi-App](https://img.shields.io/badge/Integrated-Slack%20%7C%20Linear%20%7C%20GitHub%20%7C%20Sentry-blueviolet.svg)](#)
+
+> 🎥 **Live Demo Walkthrough**: [https://youtu.be/WlpG-3ws2IA](https://youtu.be/WlpG-3ws2IA)  
+> *Watch Incident Commander investigate a live P0 production incident, perform AST & neuro-symbolic root-cause correlation, orchestrate a Slack war room, dispatch a Linear ticket, and generate an autonomous surgical hotfix PR in real-time.*
 
 ---
 
