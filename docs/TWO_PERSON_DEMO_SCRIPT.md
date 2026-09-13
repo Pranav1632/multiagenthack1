@@ -2,32 +2,30 @@
 
 This guide provides the exact script to demonstrate **Incident Commander** from two distinct human perspectives during your hackathon pitch:
 
-1. **Person 1 (The Feature Developer)**: Pushes a real code commit in another microservice (`demo_service`), runs the app, and triggers a real unhandled production exception.
-2. **Person 2 (The Incident Commander Agent)**: Sentry catches the crash $\rightarrow$ automatically fires a webhook $\rightarrow$ Incident Commander starts autonomously with zero button clicking $\rightarrow$ creates Slack war-room & Linear P0 issue $\rightarrow$ prepares hotfix revert PR!
+1. **Person 1 (The Feature Developer)**: Working in the external microservice repo [`Pranav1632/payment-microservice-demo`](https://github.com/Pranav1632/payment-microservice-demo). Pushes commit #6 introducing a production crash, and runs the app with real Sentry SDK.
+2. **Person 2 (The Incident Commander Agent)**: Sentry catches the crash $\rightarrow$ automatically fires a webhook to `http://localhost:8000/api/webhook/sentry` $\rightarrow$ Incident Commander starts autonomously with zero button clicking $\rightarrow$ creates Slack war-room & Linear P0 issue $\rightarrow$ prepares hotfix revert PR!
 
 ---
 
-## Architecture: How `demo_service/` Operates Without Breaking Anything
+## Architecture: Direct Sentry Cloud + Localhost Webhook Flow
 
 ```
-+--------------------------------------------------------------------------+
-| PERSON 1: DEVELOPER POV                                                  |
-| 1. Modifies demo_service/server.js (Introduces bad object access)        |
-| 2. Pushes commit to repo: 'refactor(payment): simplify webhook payload' |
-| 3. Customer sends real Stripe transaction -> server throws TypeError!    |
-| 4. Sentry catches error & dispatches webhook to localhost:8000           |
-+------------------------------------+-------------------------------------+
-                                     │ (POST /api/webhook/sentry)
-                                     ▼
-+--------------------------------------------------------------------------+
-| PERSON 2: AUTONOMOUS AI SRE AGENT POV                                    |
-| 1. Incident Commander receives live crash webhook                        |
-| 2. Queries GitHub API for recent commits in repo                         |
-| 3. Correlates crash line (server.js:38) against author's commit diff     |
-| 4. Dispatches Slack channel (#inc-...) & Linear P0 ticket (Team PRA)     |
-| 5. Opens surgical Hotfix PR to revert the bad commit                     |
-+--------------------------------------------------------------------------+
+[payment-microservice-demo (Port 4000)]
+      │
+      ├── (1) Sends error to Sentry Cloud (sentry.io) using your live DSN
+      │
+      └── (2) Automatically forwards to http://localhost:8000/api/webhook/sentry
+                  │
+                  ▼
+      [Incident Commander Backend (Port 8000)]
+                  │
+                  ├── Queries GitHub API for Pranav1632/payment-microservice-demo
+                  ├── Pinpoints commit 539fce1 via local Qwen 2.5
+                  ├── Posts alert to Slack (incident-app.slack.com)
+                  └── Creates P0 ticket in Linear (Team PRA)
 ```
+
+> **Note on Webhooks**: Because both the payment microservice (Port 4000) and Incident Commander (Port 8000) run on the same developer machine, `server.js` sends the webhook alert directly to `http://localhost:8000/api/webhook/sentry`. No external tunnel or ngrok domain is required!
 
 ---
 
@@ -38,25 +36,26 @@ This guide provides the exact script to demonstrate **Incident Commander** from 
    ```bash
    python run_demo.py
    ```
-2. **Terminal 2 (The Developer's Demo Microservice)**:
+2. **Terminal 2 (The Developer's Microservice)**:
    ```bash
-   cd demo_service
-   npm start
+   cd D:\project\payment-microservice-demo
+   node server.js
    ```
-   *(Output: `Demo Payment Service listening on http://localhost:4000`)*
+   *(Output: `[+] Official Sentry SDK initialized with DSN: https://49f5cd8...`)*
+   *(Output: `Payment microservice listening on http://localhost:4000`)*
 
 ---
 
 ### Part 2: Record the Demonstration
 
 #### Scene 1: The Developer's POV (Person 1) — 0:00 to 0:45
-- **What to show on screen**: Open VS Code or terminal showing `demo_service/server.js`.
+- **What to show on screen**: Open VS Code or terminal showing `D:\project\payment-microservice-demo\server.js`.
 - **Narration**:
   > *"I'm a developer working on our payment microservice. I just refactored our Stripe webhook handler to read `payload.customer.billing_address.country` directly without defensive checks, committed it to git, and deployed it."*
 - **The Action**: Open another terminal and simulate a real customer checkout hitting the service:
   ```bash
-  cd demo_service
-  npm run trigger-crash
+  cd D:\project\payment-microservice-demo
+  node trigger-crash.js
   ```
 - **What happens**:
   - `demo_service` immediately crashes with:
