@@ -8,7 +8,8 @@ import {
   Search, 
   ChevronRight,
   GitBranch,
-  Layers
+  Layers,
+  RotateCcw
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
@@ -20,7 +21,8 @@ export default function Header({
   onOpenCommandMenu,
   activeTab,
   onSelectTab,
-  isRunning
+  isRunning,
+  onReset
 }) {
   const isOllamaOnline = status?.ollama?.available ?? true;
 
@@ -111,6 +113,21 @@ export default function Header({
             <Award className={`w-3.5 h-3.5 mr-1.5 ${isEvaluating ? 'animate-spin' : 'text-zinc-400'}`} />
             <span>Benchmarks</span>
           </Button>
+
+          {/* Reset Dashboard to Clean Standby */}
+          {onReset && (
+            <Button
+              onClick={onReset}
+              disabled={isRunning}
+              variant="outline"
+              size="sm"
+              title="Reset dashboard to clean standby state"
+              className="h-8 text-xs font-mono border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200"
+            >
+              <RotateCcw className="w-3.5 h-3.5 mr-1 text-zinc-500" />
+              <span className="hidden sm:inline">Reset</span>
+            </Button>
+          )}
         </div>
       </div>
 

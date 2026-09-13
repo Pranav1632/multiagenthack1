@@ -63,17 +63,6 @@ function AppContent() {
       })
       .catch(() => {});
 
-    // Fetch the latest real captured incident from backend SQLite database
-    fetch('/api/incident/latest')
-      .then((r) => r.json())
-      .then((data) => {
-        if (data && data.incident_id) {
-          setResult(data);
-          setActiveStep('complete');
-        }
-      })
-      .catch(() => {});
-
     // Listen to live background Sentry webhooks permanently
     const liveSource = new EventSource('/api/stream/live');
     liveSource.onmessage = (e) => {
@@ -319,6 +308,18 @@ function AppContent() {
     }
   };
 
+  const handleResetDashboard = () => {
+    setResult(null);
+    setSteps([]);
+    setActiveStep(null);
+    setIsRunning(false);
+    toast({
+      title: 'Dashboard Reset to Standby',
+      description: 'System state is OPERATIONAL and awaiting live incident trigger.',
+      variant: 'default',
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-black text-[#ededed] font-sans selection:bg-zinc-800 selection:text-white vercel-grid">
       {/* Vercel Header */}
@@ -330,6 +331,7 @@ function AppContent() {
         activeTab={activeTab}
         onSelectTab={setActiveTab}
         isRunning={isRunning}
+        onReset={handleResetDashboard}
       />
 
       {/* Main SRE Control Center */}
