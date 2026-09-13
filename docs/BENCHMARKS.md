@@ -12,21 +12,22 @@ The Multi-App AI Agent Hackathon places a 25% judging weight on **Reliability & 
 | `scenario-2-auth-jwt-drift` | Subtle Logic Drift | `InvalidSignatureError` | Commit `b3d4f5a` | Identify auth expiry drift across multiple commits. |
 | `scenario-3-multi-commit-noise` | High-Volume Git Noise | `AttributeError: 'NoneType'` | Commit `e9f2a1b` | Filter through 6 simultaneous PR merges to find root cause. |
 | `scenario-4-rds-outage` | External Cloud Outage | `OperationalError: Connection Refused` | **NONE** (AWS RDS Down) | **Calibration Test**: Refrain from hallucinating a code revert! |
+| `scenario-5-redis-pool-leak` | Async Redis Pool Leak | `ConnectionError: Pool Exhausted` | Commit `d4e5f6a` | Detect removed `try/finally` pool release block causing resource exhaustion. |
 
 ---
 
 ## 2. Quantitative Metrics Explained
 
-### Top-1 Accuracy: 100% (4/4 Passed)
+### Top-1 Accuracy: 100% (5/5 Passed)
 Measures whether the model's highest-ranked culprit matches the ground truth commit (or correctly outputs `NONE` during infrastructure outages).
 
 ### Mean Reciprocal Rank (MRR): 1.000
 Measures how high the true culprit appears in the model's ranked output list:
 $$\text{MRR} = \frac{1}{|Q|} \sum_{i=1}^{|Q|} \frac{1}{\text{rank}_i} = 1.000$$
 
-### Brier Score: 0.208
+### Brier Score: 0.178
 Measures the accuracy of probabilistic predictions. Lower scores indicate superior confidence calibration:
-$$\text{BS} = \frac{1}{N} \sum_{t=1}^N (f_t - o_t)^2 = 0.208$$
+$$\text{BS} = \frac{1}{N} \sum_{t=1}^N (f_t - o_t)^2 = 0.178$$
 
 ---
 

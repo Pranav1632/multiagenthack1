@@ -273,4 +273,68 @@ def get_eval_scenarios() -> List[EvalScenario]:
         should_flag_human_review=True
     )
 
-    return [s1, s2, s3, s4]
+    # -------------------------------------------------------------
+    # Scenario 5: Async Redis Pool Leak (Resource Starvation)
+    # -------------------------------------------------------------
+    s5_alert = SentryAlert(
+        alert_id="alert-cache-302",
+        project="session-service",
+        error_type="ConnectionError",
+        message="redis.exceptions.ConnectionError: Too many open connections (max_connections=50 reached). Connection pool exhausted.",
+        timestamp="2026-09-13T23:15:00Z",
+        culprit="services/cache/redis_pool.py:88 in acquire_session_lock",
+        stack_trace=[
+            StackFrame(
+                file="services/session/manager.py",
+                line=62,
+                function="handle_user_login",
+                code="async with acquire_session_lock(user_id):"
+            ),
+            StackFrame(
+                file="services/cache/redis_pool.py",
+                line=88,
+                function="acquire_session_lock",
+                code="conn = await pool.get_connection()"
+            )
+        ]
+    )
+    s5_commits = [
+        GitCommit(
+            sha="d4e5f6a",
+            author="DevOps Lead",
+            message="perf(cache): reuse redis connection pool without closing connection context",
+            timestamp="2026-09-13T23:02:00Z",  # 13 mins before alert
+            files_changed=["services/cache/redis_pool.py"],
+            diff_patch="""--- a/services/cache/redis_pool.py
++++ b/services/cache/redis_pool.py
+@@ -85,4 +85,3 @@ async def acquire_session_lock(key):
+     conn = await pool.get_connection()
+-    try:
+-        yield conn
+-    finally:
+-        await pool.release(conn)
++    return conn"""
+        ),
+        GitCommit(
+            sha="77b8c9d",
+            author="Frontend Engineer",
+            message="style(navbar): increase avatar border radius",
+            timestamp="2026-09-13T22:30:00Z",
+            files_changed=["frontend/nav.css"],
+            diff_patch=""
+        )
+    ]
+    s5 = EvalScenario(
+        id="scenario-5-redis-pool-leak",
+        name="Async Redis Pool Leak (Resource Starvation)",
+        description="NOTE FOR JUDGES: Refactoring removed the try/finally connection release block in services/cache/redis_pool.py, causing connections to leak under concurrent load until pool exhaustion (ConnectionError).",
+        category="resource_leak",
+        alert=s5_alert,
+        commits=s5_commits,
+        expected_culprit_sha="d4e5f6a",
+        expected_min_confidence=0.70,
+        expected_max_confidence=1.0,
+        should_flag_human_review=False
+    )
+
+    return [s1, s2, s3, s4, s5]
