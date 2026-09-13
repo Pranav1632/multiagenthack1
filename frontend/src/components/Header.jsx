@@ -118,6 +118,7 @@ export default function Header({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center space-x-1 border-t border-zinc-900 text-xs font-medium overflow-x-auto">
         {[
           { id: 'overview', label: 'Mission Overview' },
+          { id: 'live-audit', label: '🔴 Live Repo & Sentry Audit' },
           { id: 'timeline', label: 'Live Trace & Logs' },
           { id: 'correlation', label: 'Root Cause & Diff' },
           { id: 'topology', label: 'Service Blast Radius' },

@@ -8,6 +8,7 @@ import BlastRadiusGraph from './components/BlastRadiusGraph';
 import CorrelationView from './components/CorrelationView';
 import SlackPreview from './components/SlackPreview';
 import LinearPreview from './components/LinearPreview';
+import LiveRepoAudit from './components/LiveRepoAudit';
 import EvalModal from './components/EvalModal';
 import CommandMenu from './components/CommandMenu';
 import { ToastProvider, useToast } from './components/ui/Toast';
@@ -217,6 +218,70 @@ function AppContent() {
     });
   };
 
+  // Trigger Real Repo Audit with live GitHub commit retrieval
+  const handleTriggerAudit = ({ repo, errorMessage, errorFile }) => {
+    if (isRunning) return;
+
+    setIsRunning(true);
+    setSteps([]);
+    setActiveStep('ingest');
+    setResult(null);
+
+    toast({
+      title: 'Live Repository Audit Triggered',
+      description: `Targeting real GitHub repo ${repo} via GitHub REST API...`,
+      variant: 'default',
+    });
+
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+
+    try {
+      const url = `/api/trigger/stream?scenario_id=real-repo-audit&repo=${encodeURIComponent(repo)}&error_message=${encodeURIComponent(errorMessage)}&error_file=${encodeURIComponent(errorFile)}`;
+      const eventSource = new EventSource(url);
+      eventSourceRef.current = eventSource;
+
+      eventSource.onmessage = (e) => {
+        try {
+          const payload = JSON.parse(e.data);
+          if (payload.type === 'step') {
+            setActiveStep(payload.step);
+            setSteps((prev) => [...prev, payload]);
+          } else if (payload.type === 'result') {
+            setResult(payload.data);
+            setActiveStep('complete');
+            setIsRunning(false);
+            eventSource.close();
+            toast({
+              title: 'Live Audit Complete!',
+              description: `Real commits audited from ${repo}. Slack & Linear updated!`,
+              variant: 'success',
+            });
+          } else if (payload.type === 'error') {
+            setIsRunning(false);
+            eventSource.close();
+            toast({
+              title: 'Audit Warning',
+              description: payload.message,
+              variant: 'destructive',
+            });
+          }
+        } catch (err) {
+          eventSource.close();
+          setIsRunning(false);
+        }
+      };
+
+      eventSource.onerror = () => {
+        eventSource.close();
+        setIsRunning(false);
+      };
+    } catch (err) {
+      setIsRunning(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-black text-[#ededed] font-sans selection:bg-zinc-800 selection:text-white vercel-grid">
       {/* Vercel Header */}
@@ -238,6 +303,55 @@ function AppContent() {
           isRunning={isRunning}
           selectedPreset={selectedPreset}
         />
+
+        {/* Live Repo Audit Tab */}
+        {activeTab === 'live-audit' && (
+          <div className="space-y-6">
+            <LiveRepoAudit
+              onTriggerAudit={handleTriggerAudit}
+              isRunning={isRunning}
+            />
+
+            {/* Stepper and Terminal */}
+            <ExecutionTimeline
+              steps={steps}
+              activeStep={activeStep}
+              isRunning={isRunning}
+            />
+
+            <LiveStreamConsole
+              steps={steps}
+              isRunning={isRunning}
+              onCopyLogs={() => {
+                toast({
+                  title: 'Logs Copied to Clipboard',
+                  description: 'All telemetry logs copied in plain text.',
+                  variant: 'default',
+                });
+              }}
+            />
+
+            {/* Results */}
+            {result && (
+              <>
+                <CorrelationView
+                  result={result}
+                  onHotfixPR={handleHotfixPR}
+                />
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <SlackPreview
+                    slack={result.slack}
+                    onActionClick={handleSlackAction}
+                  />
+                  <LinearPreview
+                    linear={result.linear}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {/* View Layouts depending on active tab */}
         {activeTab === 'overview' && (

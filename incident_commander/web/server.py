@@ -114,10 +114,16 @@ async def trigger_incident(payload: Dict[str, Any]):
     return result.model_dump()
 
 @app.get("/api/trigger/stream")
-async def trigger_incident_stream(request: Request, scenario_id: Optional[str] = "scenario-1-payment-keyerror"):
+async def trigger_incident_stream(
+    request: Request, 
+    scenario_id: Optional[str] = "scenario-1-payment-keyerror",
+    repo: Optional[str] = None,
+    error_message: Optional[str] = None,
+    error_file: Optional[str] = None
+):
     """Server-Sent Events (SSE) streaming real-time execution steps."""
     scenarios = {s.id: s for s in get_eval_scenarios()}
-    scenario = scenarios.get(scenario_id, scenarios.get("scenario-1-payment-keyerror"))
+    scenario = scenarios.get(scenario_id)
 
     async def event_generator():
         event_queue = asyncio.Queue()
@@ -127,12 +133,45 @@ async def trigger_incident_stream(request: Request, scenario_id: Optional[str] =
 
         async def worker():
             try:
-                res = await orchestrator.run_pipeline(
-                    alert_payload=scenario.alert,
-                    commits=scenario.commits,
-                    repo=f"acme-corp/{scenario.alert.project}",
-                    on_step_callback=step_callback
-                )
+                if scenario_id == "real-repo-audit":
+                    target_repo = repo or settings.GITHUB_DEFAULT_REPO
+                    err_msg = error_message or "TypeError: Cannot read properties of undefined (reading 'call')"
+                    err_file = error_file or "frontend/src/lib/utils.js"
+                    
+                    from ..types import SentryAlert, StackFrame
+                    from datetime import datetime, timezone
+                    
+                    custom_alert = SentryAlert(
+                        alert_id=f"alert-live-{int(asyncio.get_event_loop().time())}",
+                        project=target_repo.split("/")[-1],
+                        error_type=err_msg.split(":")[0],
+                        message=err_msg,
+                        timestamp=datetime.now(timezone.utc).isoformat(),
+                        culprit=f"{err_file}:1 in main",
+                        stack_trace=[
+                            StackFrame(
+                                file=err_file,
+                                line=1,
+                                function="main",
+                                code="export function cn(...inputs)"
+                            )
+                        ]
+                    )
+                    
+                    res = await orchestrator.run_pipeline(
+                        alert_payload=custom_alert,
+                        commits=None,  # Triggers real GitHub API fetch!
+                        repo=target_repo,
+                        on_step_callback=step_callback
+                    )
+                else:
+                    target_scenario = scenario or scenarios.get("scenario-1-payment-keyerror")
+                    res = await orchestrator.run_pipeline(
+                        alert_payload=target_scenario.alert,
+                        commits=target_scenario.commits,
+                        repo=f"acme-corp/{target_scenario.alert.project}",
+                        on_step_callback=step_callback
+                    )
                 await event_queue.put({"type": "result", "data": res.model_dump()})
             except Exception as e:
                 await event_queue.put({"type": "error", "message": str(e)})
