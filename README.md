@@ -18,7 +18,7 @@
 
 ## 📸 Production Live System Screenshots
 
-> **Real-World Live System Verification**: The following screenshots demonstrate our end-to-end multi-app incident resolution in action across Sentry Cloud, Cybernetic Mission Control, Slack, and Linear with zero button clicks.
+> **Real-World Live System Verification**: The following screenshots demonstrate our end-to-end multi-app incident resolution in action across Sentry Cloud, Cybernetic Mission Control, Slack, Linear, and Antigravity Plugin/MCP with zero button clicks.
 
 ### 1. 🖥️ Cybernetic Mission Control Dashboard
 *Live SRE Mission Control capturing the production crash in `payment-microservice-demo`, displaying 4.2s MTTC (-82% vs Human), AST overlap confidence, 3-node blast radius, and active incident banner.*
@@ -35,6 +35,10 @@
 ### 4. 📋 Linear P0 Incident Ticket Dispatch
 *Actionable P0 Urgent issue automatically filed under team `PRA` in the `pranav1632` workspace, containing full diagnostic stack frames, root-cause attribution, and automated `git revert 539fce1 -m 1` remediation command.*
 ![Linear P0 Incident Ticket Dispatch](docs/images/04_linear_ticket.png)
+
+### 5. 🔌 Antigravity Native Plugin & MCP Integration
+*Native Google Antigravity IDE integration showing live workspace discovery of `@incident-commander`, exposing `mcp_config.json`, `plugin.json`, and the autonomous `incident-triage` skill runbook for interactive developer triage.*
+![Antigravity Native Plugin & MCP Integration](docs/images/05_antigravity_plugin_mcp.png)
 
 ---
 
@@ -834,6 +838,8 @@ Mounted via **progressive disclosure**, injecting specialized SRE triage instruc
 Once mounted in Antigravity, you can interact with the agent directly in the chat:
 > *"@incident-commander investigate the latest crash in payment-microservice-demo"*  
 > *"Run an autonomous triage on billing-keyerror and open a hotfix PR"*
+
+![Antigravity Chat Native Plugin Discovery](docs/images/05_antigravity_plugin_mcp.png)
 
 ---
 
