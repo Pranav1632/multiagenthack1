@@ -28,6 +28,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint for container orchestrators and CI/CD probes."""
+    return {
+        "status": "healthy",
+        "service": "incident-commander",
+        "version": "1.0.0",
+        "live_mode": settings.LIVE_API_MODE,
+        "database": Path(settings.DATABASE_PATH).exists()
+    }
+
 @app.get("/api/status")
 async def get_system_status():
     status = settings.get_status()

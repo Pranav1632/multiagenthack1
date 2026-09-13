@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  incident-commander:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: incident-commander-app
+    ports:
+      - "8000:8000"
+    environment:
+      - LIVE_API_MODE=true
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - LINEAR_TEAM_ID=PRA
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - incident_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  incident_data:
