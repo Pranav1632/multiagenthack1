@@ -29,13 +29,17 @@ class LinearConnector(BaseLinearConnector):
         conf_pct = int(hypothesis.confidence * 100)
         evidence_md = "\n".join([f"- {e}" for e in hypothesis.evidence]) if hypothesis.evidence else "- Manual triage required."
         
+        # Format human-readable UTC timestamp
+        occurred_at = alert.timestamp or datetime.now(timezone.utc).isoformat()
+        
         body = f"""## 🚨 Production Incident Briefing
 
 - **Service / Project**: `{alert.project}`
 - **Error Type**: `{alert.error_type}`
 - **Error Message**: `{alert.message}`
 - **Crash Location**: `{alert.culprit or 'Unknown'}`
-- **Incident Channel**: `{slack_channel or '#incident-commander'}`
+- **First Detected (UTC)**: `{occurred_at}`
+- **Incident War-Room**: `{slack_channel or '#incident-commander'}`
 
 ---
 

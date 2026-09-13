@@ -74,7 +74,11 @@ class IncidentOrchestrator:
 
         print(f"[*] [4/5 SLACK]  Creating incident war-room channel #{channel_slug} and posting BlockKit...")
         slack_card = await self.slack.create_incident_channel_and_notify(
-            alert.project, alert, hypothesis, linear_ticket
+            service=alert.project,
+            alert=alert,
+            hypothesis=hypothesis,
+            linear_ticket=linear_ticket,
+            channel_name=channel_slug
         )
         print(f"    [4/5 SLACK]  Channel {slack_card.channel_name} active with briefing pinned (Live: {slack_card.is_live})")
 

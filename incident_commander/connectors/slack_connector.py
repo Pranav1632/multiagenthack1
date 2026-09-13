@@ -39,12 +39,12 @@ class SlackConnector(BaseSlackConnector):
         return "T0C2BU9S40Y", "incident-app"
 
     def generate_channel_name(self, service: str, alert_id: Optional[str] = None) -> str:
-        date_str = datetime.now(timezone.utc).strftime("%m%d")
-        clean_service = re.sub(r"[^a-zA-Z0-9-]", "-", service.lower()).strip("-")[:14]
-        # Include short unique suffix to avoid name_taken collisions
+        # Include current UTC day and time (MMDD-HHMM) plus unique hex suffix to guarantee a brand new channel on every run
+        time_str = datetime.now(timezone.utc).strftime("%m%d-%H%M")
+        clean_service = re.sub(r"[^a-zA-Z0-9-]", "-", service.lower()).strip("-")[:12]
         import uuid
-        suffix = alert_id[-4:] if alert_id else uuid.uuid4().hex[:4]
-        return f"inc-{date_str}-{clean_service}-{suffix}".lower()
+        unique_suffix = uuid.uuid4().hex[:3]
+        return f"inc-{time_str}-{clean_service}-{unique_suffix}".lower()
 
     def build_block_kit(
         self,
@@ -137,9 +137,10 @@ class SlackConnector(BaseSlackConnector):
         service: str,
         alert: SentryAlert,
         hypothesis: RootCauseHypothesis,
-        linear_ticket: Optional[LinearTicketOutput] = None
+        linear_ticket: Optional[LinearTicketOutput] = None,
+        channel_name: Optional[str] = None
     ) -> SlackCardOutput:
-        channel_name = self.generate_channel_name(service, alert.alert_id)
+        channel_name = channel_name or self.generate_channel_name(service, alert.alert_id)
         blocks = self.build_block_kit(service, alert, hypothesis, linear_ticket)
 
         if self.live_mode and self.token:
