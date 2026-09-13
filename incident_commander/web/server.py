@@ -70,6 +70,32 @@ async def get_presets():
         })
     return presets
 
+@app.post("/api/webhook/sentry")
+async def sentry_webhook_listener(request: Request):
+    """
+    100% Autonomous Production Sentry Webhook Listener.
+    Receives live incoming Sentry alert webhooks and autonomously investigates with zero human intervention.
+    """
+    try:
+        raw_body = await request.json()
+    except Exception:
+        raw_body = {}
+
+    repo = settings.GITHUB_DEFAULT_REPO
+    result = await orchestrator.run_pipeline(
+        alert_payload=raw_body,
+        repo=repo
+    )
+    return {
+        "status": "autonomous_investigation_complete",
+        "incident_id": result.incident_id,
+        "culprit": result.top_hypothesis.culprit_sha,
+        "confidence": result.top_hypothesis.confidence,
+        "slack_channel": result.slack.channel_name,
+        "linear_ticket": result.linear.ticket_key,
+        "execution_time_ms": result.execution_time_ms
+    }
+
 @app.post("/api/trigger")
 async def trigger_incident(payload: Dict[str, Any]):
     """Trigger incident investigation from raw alert payload or preset."""

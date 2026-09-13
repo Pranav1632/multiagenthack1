@@ -1,81 +1,146 @@
 import React from 'react';
-import { Network, Server, ArrowRight, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { 
+  Network, 
+  Server, 
+  Database, 
+  Globe, 
+  ArrowRight, 
+  AlertTriangle, 
+  CheckCircle2, 
+  ShieldAlert,
+  Layers,
+  ArrowDown
+} from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/Card';
+import { Badge } from './ui/Badge';
 
 export default function BlastRadiusGraph({ project, errorType }) {
   return (
-    <div className="bg-[#111726]/80 border border-slate-800/80 rounded-2xl p-6 shadow-xl backdrop-blur-md">
-      <div className="flex items-center space-x-2.5 mb-4">
-        <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400">
-          <Network className="w-5 h-5" />
-        </div>
-        <div>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300 font-mono">
-            Service Blast Radius & Dependency Topology
-          </h2>
-          <p className="text-xs text-slate-400">
-            Real-time topology mapping upstream callers and downstream dependencies.
-          </p>
-        </div>
-      </div>
+    <Card className="border-zinc-800 bg-zinc-950/90 shadow-lg">
+      <CardHeader className="p-5 sm:p-6 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center space-x-2">
+            <span className="flex h-2 w-2 rounded-full bg-zinc-400" />
+            <CardTitle className="text-sm font-mono uppercase tracking-wider text-zinc-300">
+              3. Service Blast Radius & Dependency Topology
+            </CardTitle>
+          </div>
 
-      {/* Visual Service Nodes */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center font-mono text-xs">
-        {/* Node 1: Ingress */}
-        <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-700/60 flex items-center space-x-3">
-          <div className="p-2 rounded-lg bg-slate-800 text-slate-300">
-            <Server className="w-4 h-4" />
-          </div>
-          <div>
-            <span className="text-slate-400 text-[10px] block">API GATEWAY</span>
-            <span className="font-bold text-white">web-ingress</span>
-            <span className="text-[10px] text-emerald-400 flex items-center gap-1 mt-0.5">
-              <CheckCircle2 className="w-3 h-3" /> Healthy
-            </span>
+          <div className="flex items-center space-x-2">
+            <Badge variant="outline" className="font-mono text-[11px] text-zinc-400 border-zinc-800">
+              Topology: 4 Nodes Monitored
+            </Badge>
           </div>
         </div>
+      </CardHeader>
 
-        {/* Node 2: Crashing Service */}
-        <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-500/50 glow-red flex items-center space-x-3 relative">
-          <div className="p-2 rounded-lg bg-red-900/60 text-red-300 animate-pulse">
-            <AlertTriangle className="w-4 h-4" />
+      <CardContent className="p-5 sm:p-6 pt-2">
+        {/* Topology Nodes Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5 items-stretch font-mono text-xs">
+          {/* Node 1: Edge Ingress */}
+          <div className="rounded-lg border border-zinc-800/80 bg-zinc-900/60 p-4 flex flex-col justify-between space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded bg-zinc-800 text-zinc-300">
+                <Globe className="w-4 h-4" />
+              </div>
+              <Badge variant="success" className="text-[10px] font-mono gap-1">
+                <CheckCircle2 className="w-2.5 h-2.5" /> Normal
+              </Badge>
+            </div>
+            <div>
+              <span className="text-[10px] text-zinc-500 block uppercase tracking-wider font-semibold">
+                Tier 0: Edge Ingress
+              </span>
+              <h5 className="font-bold text-white text-sm mt-0.5">web-ingress</h5>
+              <p className="text-[11px] text-zinc-400 font-sans mt-1">
+                Cloudflare edge load balancer. Routing traffic normally.
+              </p>
+            </div>
+            <div className="pt-2 border-t border-zinc-800/60 flex items-center justify-between text-[10px] text-zinc-500">
+              <span>Latency: 14ms</span>
+              <span>P99: 22ms</span>
+            </div>
           </div>
-          <div>
-            <span className="text-red-400 text-[10px] block font-bold">FAULT ORIGIN</span>
-            <span className="font-bold text-red-200">{project || 'billing-service'}</span>
-            <span className="text-[10px] text-red-400 font-bold block mt-0.5">
-              {errorType || 'Error Spike'}
-            </span>
-          </div>
-        </div>
 
-        {/* Node 3: Upstream Dependency */}
-        <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-700/60 flex items-center space-x-3">
-          <div className="p-2 rounded-lg bg-slate-800 text-slate-300">
-            <Server className="w-4 h-4" />
+          {/* Node 2: Failing Fault Origin (Highlighted) */}
+          <div className="rounded-lg border border-rose-900/80 bg-rose-950/20 p-4 flex flex-col justify-between space-y-3 ring-1 ring-rose-800/40">
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded bg-rose-950 text-rose-300 border border-rose-800/60">
+                <AlertTriangle className="w-4 h-4" />
+              </div>
+              <Badge variant="destructive" className="text-[10px] font-mono font-bold gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping" />
+                FAULT ORIGIN
+              </Badge>
+            </div>
+            <div>
+              <span className="text-[10px] text-rose-400 block uppercase tracking-wider font-bold">
+                Tier 1: Crashing Target
+              </span>
+              <h5 className="font-bold text-white text-sm mt-0.5">
+                {project || 'billing-service'}
+              </h5>
+              <p className="text-[11px] text-rose-200/80 font-sans mt-1">
+                {errorType || 'KeyError in handle_stripe_webhook'}
+              </p>
+            </div>
+            <div className="pt-2 border-t border-rose-900/50 flex items-center justify-between text-[10px] text-rose-400 font-bold">
+              <span>Error Rate: 100%</span>
+              <span>HTTP 500</span>
+            </div>
           </div>
-          <div>
-            <span className="text-slate-400 text-[10px] block">PAYMENT GATEWAY</span>
-            <span className="font-bold text-white">stripe-api</span>
-            <span className="text-[10px] text-amber-400 flex items-center gap-1 mt-0.5">
-              Degraded Callers
-            </span>
-          </div>
-        </div>
 
-        {/* Node 4: Storage */}
-        <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-700/60 flex items-center space-x-3">
-          <div className="p-2 rounded-lg bg-slate-800 text-slate-300">
-            <Server className="w-4 h-4" />
+          {/* Node 3: Upstream Callers */}
+          <div className="rounded-lg border border-zinc-800/80 bg-zinc-900/60 p-4 flex flex-col justify-between space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded bg-zinc-800 text-zinc-300">
+                <Server className="w-4 h-4" />
+              </div>
+              <Badge variant="warning" className="text-[10px] font-mono gap-1">
+                Degraded Callers
+              </Badge>
+            </div>
+            <div>
+              <span className="text-[10px] text-zinc-500 block uppercase tracking-wider font-semibold">
+                Tier 2: Upstream Gateway
+              </span>
+              <h5 className="font-bold text-white text-sm mt-0.5">stripe-webhook</h5>
+              <p className="text-[11px] text-zinc-400 font-sans mt-1">
+                Stripe event delivery webhook queue. Retrying dropped events.
+              </p>
+            </div>
+            <div className="pt-2 border-t border-zinc-800/60 flex items-center justify-between text-[10px] text-zinc-500">
+              <span>Retries: 42/min</span>
+              <span>Backoff: Exp</span>
+            </div>
           </div>
-          <div>
-            <span className="text-slate-400 text-[10px] block">DATABASE</span>
-            <span className="font-bold text-white">postgres-primary</span>
-            <span className="text-[10px] text-emerald-400 flex items-center gap-1 mt-0.5">
-              <CheckCircle2 className="w-3 h-3" /> Healthy
-            </span>
+
+          {/* Node 4: Persistence Layer */}
+          <div className="rounded-lg border border-zinc-800/80 bg-zinc-900/60 p-4 flex flex-col justify-between space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded bg-zinc-800 text-zinc-300">
+                <Database className="w-4 h-4" />
+              </div>
+              <Badge variant="success" className="text-[10px] font-mono gap-1">
+                <CheckCircle2 className="w-2.5 h-2.5" /> Healthy
+              </Badge>
+            </div>
+            <div>
+              <span className="text-[10px] text-zinc-500 block uppercase tracking-wider font-semibold">
+                Tier 3: Persistence
+              </span>
+              <h5 className="font-bold text-white text-sm mt-0.5">postgres-primary</h5>
+              <p className="text-[11px] text-zinc-400 font-sans mt-1">
+                PostgreSQL transactional cluster. No deadlocks or connection saturation.
+              </p>
+            </div>
+            <div className="pt-2 border-t border-zinc-800/60 flex items-center justify-between text-[10px] text-zinc-500">
+              <span>Pool: 18/50 Conns</span>
+              <span>CPU: 8%</span>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

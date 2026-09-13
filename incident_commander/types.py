@@ -47,6 +47,10 @@ class RootCauseHypothesis(BaseModel):
     recommended_action: str
     needs_human_review: bool = False
     is_external_outage: bool = False
+    llm_prompt: Optional[str] = None
+    llm_response: Optional[str] = None
+    llm_model: Optional[str] = None
+    llm_latency_ms: Optional[float] = None
 
 class SlackCardOutput(BaseModel):
     channel_id: str

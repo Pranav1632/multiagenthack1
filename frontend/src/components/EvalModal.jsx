@@ -1,135 +1,140 @@
 import React from 'react';
-import { X, Award, CheckCircle2, XCircle, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
+import { 
+  X, 
+  Award, 
+  CheckCircle2, 
+  XCircle, 
+  RefreshCw, 
+  ShieldCheck, 
+  Sparkles,
+  Zap,
+  Gauge
+} from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/Dialog';
+import { Button } from './ui/Button';
+import { Badge } from './ui/Badge';
 
 export default function EvalModal({ isOpen, onClose, scorecard, onReRun, isEvaluating }) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-[#0f1422] border border-slate-700/80 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6 relative">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        {/* Modal Header */}
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
-            <Award className="w-7 h-7" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h2 className="text-xl font-extrabold text-white">
-                Reliability & Evaluation Benchmark Suite
-              </h2>
-              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                25% CRITERION
-              </span>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-zinc-950 border-zinc-800 p-6 text-zinc-100" onClose={onClose}>
+        {/* Header */}
+        <DialogHeader className="mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-white">
+              <Award className="w-5 h-5 text-white" />
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Empirical scoring across 4 pre-seeded synthetic incident scenarios testing accuracy, noise pruning, and calibration.
-            </p>
+            <div>
+              <div className="flex items-center space-x-2">
+                <DialogTitle className="text-base font-bold text-white">
+                  Reliability & Evaluation Benchmark Suite
+                </DialogTitle>
+                <Badge variant="outline" className="font-mono text-[10px] text-zinc-400 border-zinc-700">
+                  25% CRITERION
+                </Badge>
+              </div>
+              <DialogDescription className="mt-1">
+                Empirical scoring across 4 pre-seeded synthetic production incidents testing accuracy, noise pruning, and calibration.
+              </DialogDescription>
+            </div>
           </div>
-        </div>
+        </DialogHeader>
 
         {/* Top Metric Cards */}
         {scorecard && (
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-6">
-            <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800">
-              <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div className="p-4 rounded-lg bg-zinc-900/70 border border-zinc-800">
+              <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider block">
                 Top-1 Accuracy
               </span>
-              <div className="text-2xl font-black text-emerald-400 mt-1 flex items-baseline gap-1">
+              <div className="text-2xl font-bold text-white mt-1 flex items-baseline gap-1">
                 {(scorecard.top1_accuracy * 100).toFixed(1)}%
-                <span className="text-xs text-slate-400 font-mono font-normal">
+                <span className="text-xs text-zinc-400 font-mono font-normal">
                   ({scorecard.passed_cases}/{scorecard.total_cases})
                 </span>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800">
-              <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">
+            <div className="p-4 rounded-lg bg-zinc-900/70 border border-zinc-800">
+              <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider block">
                 MRR (Rank Metric)
               </span>
-              <div className="text-2xl font-black text-sky-400 mt-1">
+              <div className="text-2xl font-bold text-white mt-1">
                 {scorecard.mean_reciprocal_rank.toFixed(3)}
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800">
-              <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">
+            <div className="p-4 rounded-lg bg-zinc-900/70 border border-zinc-800">
+              <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider block">
                 Calibration Brier
               </span>
-              <div className="text-2xl font-black text-purple-400 mt-1">
+              <div className="text-2xl font-bold text-white mt-1">
                 {scorecard.brier_score.toFixed(3)}
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800">
-              <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">
-                Latency
+            <div className="p-4 rounded-lg bg-zinc-900/70 border border-zinc-800">
+              <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider block">
+                P95 Latency
               </span>
-              <div className="text-2xl font-black text-amber-400 mt-1">
-                &lt; 5.0s
+              <div className="text-2xl font-bold text-white mt-1">
+                &lt; 4.8s
               </div>
             </div>
           </div>
         )}
 
-        {/* Calibration Highlight Banner */}
-        <div className="p-4 rounded-xl bg-gradient-to-r from-purple-950/40 to-sky-950/40 border border-purple-500/30 mb-6 flex items-start space-x-3">
-          <Sparkles className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
-          <div className="text-xs text-slate-300 leading-relaxed">
-            <strong className="text-white block font-mono text-sm mb-0.5">
+        {/* Calibration Guard Highlight */}
+        <div className="p-4 rounded-lg bg-zinc-900 border border-zinc-800 mb-6 flex items-start space-x-3">
+          <Sparkles className="w-5 h-5 text-white shrink-0 mt-0.5" />
+          <div className="text-xs text-zinc-300 leading-relaxed font-sans">
+            <strong className="text-white block font-mono text-xs mb-1">
               The "Don't Guess" Calibration Guard (Reliability Differentiator)
             </strong>
-            Scenario #4 simulates an external AWS RDS connection timeout where zero code commits were deployed.
-            Rather than blindly hallucinating a commit rollback, the agent correctly outputted{' '}
-            <span className="text-purple-300 font-mono font-bold">18% Low Confidence</span> and flagged it for human infrastructure review!
+            Scenario #4 tests an external AWS RDS connection timeout where zero code commits were deployed.
+            Rather than blindly hallucinating a code revert, the agent outputs a calibrated{' '}
+            <span className="text-white font-mono font-bold">18% Low Confidence</span> and flags it for human infrastructure review!
           </div>
         </div>
 
-        {/* Results Table */}
+        {/* Benchmark Results Table */}
         {scorecard && (
-          <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/80 mb-6">
+          <div className="overflow-x-auto rounded-lg border border-zinc-800 bg-black mb-6">
             <table className="w-full text-left font-mono text-xs">
-              <thead className="bg-slate-900 text-slate-400 border-b border-slate-800">
+              <thead className="bg-zinc-900/90 text-zinc-400 border-b border-zinc-800 text-[11px]">
                 <tr>
-                  <th className="py-3 px-3.5">Status</th>
-                  <th className="py-3 px-3.5">Scenario</th>
-                  <th className="py-3 px-3.5">Predicted SHA</th>
-                  <th className="py-3 px-3.5">Expected SHA</th>
-                  <th className="py-3 px-3.5 text-center">Confidence</th>
-                  <th className="py-3 px-3.5 text-right">Latency</th>
+                  <th className="py-2.5 px-3.5">Status</th>
+                  <th className="py-2.5 px-3.5">Scenario Name</th>
+                  <th className="py-2.5 px-3.5">Predicted SHA</th>
+                  <th className="py-2.5 px-3.5">Expected SHA</th>
+                  <th className="py-2.5 px-3 text-center">Confidence</th>
+                  <th className="py-2.5 px-3.5 text-right">Latency</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {scorecard.results.map((r) => (
-                  <tr key={r.scenario_id} className="hover:bg-slate-900/50">
-                    <td className="py-3 px-3.5">
+              <tbody className="divide-y divide-zinc-900 text-xs">
+                {scorecard.results?.map((r) => (
+                  <tr key={r.scenario_id} className="hover:bg-zinc-900/40 transition-colors">
+                    <td className="py-2.5 px-3.5">
                       {r.passed ? (
                         <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
                           <CheckCircle2 className="w-4 h-4" /> PASS
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1.5 text-red-400 font-bold">
+                        <span className="flex items-center gap-1.5 text-rose-400 font-bold">
                           <XCircle className="w-4 h-4" /> FAIL
                         </span>
                       )}
                     </td>
-                    <td className="py-3 px-3.5 font-bold text-white">{r.name}</td>
-                    <td className="py-3 px-3.5 text-sky-400">{r.predicted_sha || 'NONE (Infra)'}</td>
-                    <td className="py-3 px-3.5 text-slate-400">{r.expected_sha || 'NONE (Infra)'}</td>
-                    <td className="py-3 px-3.5 text-center">
-                      <span className="px-2 py-0.5 rounded bg-slate-800 font-bold text-slate-200">
+                    <td className="py-2.5 px-3.5 font-bold text-white">{r.name}</td>
+                    <td className="py-2.5 px-3.5 text-zinc-300">{r.predicted_sha || 'NONE (Infra)'}</td>
+                    <td className="py-2.5 px-3.5 text-zinc-500">{r.expected_sha || 'NONE (Infra)'}</td>
+                    <td className="py-2.5 px-3 text-center">
+                      <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-200 font-bold">
                         {Math.round(r.confidence * 100)}%
                       </span>
                     </td>
-                    <td className="py-3 px-3.5 text-right text-slate-400">
-                      {r.latency_ms.toFixed(0)}ms
+                    <td className="py-2.5 px-3.5 text-right text-zinc-400">
+                      {r.latency_ms?.toFixed(0)}ms
                     </td>
                   </tr>
                 ))}
@@ -138,22 +143,24 @@ export default function EvalModal({ isOpen, onClose, scorecard, onReRun, isEvalu
           </div>
         )}
 
-        {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-800">
-          <span className="text-xs font-mono text-slate-500">
-            Last evaluated: {scorecard ? new Date(scorecard.run_timestamp).toLocaleTimeString() : 'Never'}
+        {/* Modal Footer */}
+        <div className="flex items-center justify-between pt-4 border-t border-zinc-800 text-xs font-mono text-zinc-500">
+          <span>
+            Last run: {scorecard ? new Date(scorecard.run_timestamp).toLocaleTimeString() : 'Never'}
           </span>
 
-          <button
+          <Button
             onClick={onReRun}
             disabled={isEvaluating}
-            className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition cursor-pointer"
+            variant="vercel"
+            size="sm"
+            className="h-8 font-mono text-xs cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 ${isEvaluating ? 'animate-spin' : ''}`} />
-            <span>{isEvaluating ? 'Running Benchmark...' : 'Re-Run Evaluation Suite'}</span>
-          </button>
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isEvaluating ? 'animate-spin' : ''}`} />
+            <span>{isEvaluating ? 'Benchmarking...' : 'Re-Run Benchmark'}</span>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

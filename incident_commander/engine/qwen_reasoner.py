@@ -123,8 +123,7 @@ Respond ONLY in valid JSON matching this schema:
         commits_map: dict
     ) -> RootCauseHypothesis:
         """Query local Qwen 2.5 via Ollama, falling back to deterministic engine on timeout."""
-        prompt = self.build_prompt(alert, top_candidates, commits_map)
-
+        t0 = time.time()
         try:
             async with httpx.AsyncClient(timeout=3.5) as client:
                 resp = await client.post(
@@ -141,6 +140,7 @@ Respond ONLY in valid JSON matching this schema:
                     data = resp.json()
                     response_text = data.get("response", "").strip()
                     parsed = json.loads(response_text)
+                    llm_lat = round((time.time() - t0) * 1000, 2)
                     return RootCauseHypothesis(
                         culprit_sha=parsed.get("culprit_sha"),
                         confidence=float(parsed.get("confidence", 0.75)),
@@ -149,12 +149,27 @@ Respond ONLY in valid JSON matching this schema:
                         surgical_patch=parsed.get("surgical_patch"),
                         recommended_action=parsed.get("recommended_action", f"git revert {parsed.get('culprit_sha')}"),
                         needs_human_review=bool(parsed.get("needs_human_review", False)),
-                        is_external_outage=bool(parsed.get("is_external_outage", False))
+                        is_external_outage=bool(parsed.get("is_external_outage", False)),
+                        llm_prompt=prompt,
+                        llm_response=response_text,
+                        llm_model=self.model,
+                        llm_latency_ms=llm_lat
                     )
         except Exception:
             # Seamless fallback to guarantee zero-fail demo
             pass
 
-        return self.deterministic_fallback(alert, top_candidates, commits_map)
+        fallback = self.deterministic_fallback(alert, top_candidates, commits_map)
+        fallback.llm_prompt = prompt
+        fallback.llm_response = json.dumps({
+            "culprit_sha": fallback.culprit_sha,
+            "confidence": fallback.confidence,
+            "hypothesis": fallback.hypothesis,
+            "evidence": fallback.evidence,
+            "recommended_action": fallback.recommended_action
+        }, indent=2)
+        fallback.llm_model = f"{self.model} (Hybrid Fallback)"
+        fallback.llm_latency_ms = round((time.time() - t0) * 1000, 2)
+        return fallback
 
 qwen_reasoner = QwenReasoner()

@@ -1,100 +1,156 @@
 import React from 'react';
-import { Play, AlertOctagon, KeyRound, Database, CloudOff, ArrowRight } from 'lucide-react';
+import { 
+  Play, 
+  AlertCircle, 
+  KeyRound, 
+  Database, 
+  CloudOff, 
+  Check, 
+  GitCommit, 
+  ChevronRight,
+  ShieldCheck,
+  Zap
+} from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './ui/Card';
+import { Button } from './ui/Button';
+import { Badge } from './ui/Badge';
 
-export default function IncidentTrigger({ presets, selectedPreset, onSelectPreset, onTrigger, isRunning }) {
-  const getIcon = (category) => {
+export default function IncidentTrigger({
+  presets,
+  selectedPreset,
+  onSelectPreset,
+  onTrigger,
+  isRunning,
+}) {
+  const getCategoryBadge = (category) => {
     switch (category) {
       case 'direct_bug':
-        return <AlertOctagon className="w-5 h-5 text-red-400" />;
+        return (
+          <Badge variant="destructive" className="font-mono text-[10px] font-semibold">
+            CODE REGRESSION
+          </Badge>
+        );
       case 'config_drift':
-        return <KeyRound className="w-5 h-5 text-amber-400" />;
+        return (
+          <Badge variant="warning" className="font-mono text-[10px] font-semibold">
+            CONFIG DRIFT
+          </Badge>
+        );
       case 'multi_commit_noise':
-        return <Database className="w-5 h-5 text-sky-400" />;
+        return (
+          <Badge variant="blue" className="font-mono text-[10px] font-semibold">
+            NOISE PRUNING
+          </Badge>
+        );
       case 'infra_outage':
-        return <CloudOff className="w-5 h-5 text-purple-400" />;
+        return (
+          <Badge variant="secondary" className="font-mono text-[10px] font-semibold border-purple-800 text-purple-300">
+            INFRA OUTAGE
+          </Badge>
+        );
       default:
-        return <AlertOctagon className="w-5 h-5 text-slate-400" />;
+        return (
+          <Badge variant="outline" className="font-mono text-[10px]">
+            INCIDENT
+          </Badge>
+        );
     }
   };
 
   return (
-    <div className="bg-[#111726]/80 border border-slate-800/80 rounded-2xl p-6 shadow-xl backdrop-blur-md">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-        <div>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-            1. Trigger Simulated Sentry Alert
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Select a production crash scenario to launch the automated correlation and response loop.
-          </p>
-        </div>
-
-        <button
-          onClick={onTrigger}
-          disabled={isRunning}
-          className={`flex items-center justify-center space-x-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg ${
-            isRunning
-              ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-              : 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/30 glow-red border border-red-400/50 cursor-pointer active:scale-95'
-          }`}
-        >
-          <Play className={`w-4 h-4 fill-current ${isRunning ? 'animate-spin' : ''}`} />
-          <span>{isRunning ? 'Investigating...' : 'TRIGGER INCIDENT'}</span>
-        </button>
-      </div>
-
-      {/* Scenario Presets Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-        {presets.map((p) => {
-          const isSelected = selectedPreset?.id === p.id;
-          return (
-            <div
-              key={p.id}
-              onClick={() => !isRunning && onSelectPreset(p)}
-              className={`p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
-                isSelected
-                  ? 'bg-slate-800/90 border-sky-500/80 glow-blue ring-1 ring-sky-500/50'
-                  : 'bg-slate-900/50 border-slate-800/80 hover:bg-slate-800/40 hover:border-slate-700'
-              }`}
-            >
-              {isSelected && (
-                <div className="absolute top-0 right-0 w-12 h-12 overflow-hidden pointer-events-none">
-                  <div className="bg-sky-500 text-[9px] font-bold text-slate-900 py-0.5 text-center transform rotate-45 translate-x-3 translate-y-1 shadow">
-                    READY
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <div className="flex items-center space-x-2.5 mb-2">
-                  <div className="p-2 rounded-lg bg-slate-800 border border-slate-700/60">
-                    {getIcon(p.category)}
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-white leading-tight">
-                      {p.name}
-                    </h3>
-                    <span className="text-[10px] font-mono text-slate-400">
-                      {p.alert.project}
-                    </span>
-                  </div>
-                </div>
-                <p className="text-[11px] text-slate-400 line-clamp-2 mt-1">
-                  {p.description}
-                </p>
-              </div>
-
-              <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
-                <span className="px-1.5 py-0.5 rounded bg-slate-800/80 border border-slate-700/50">
-                  {p.alert.error_type}
-                </span>
-                <span>{p.commits_count} candidate commits</span>
-              </div>
+    <Card className="border-zinc-800 bg-zinc-950/90 shadow-lg">
+      <CardHeader className="p-5 sm:p-6 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="flex h-2 w-2 rounded-full bg-rose-500" />
+              <CardTitle className="text-sm font-mono uppercase tracking-wider text-zinc-300">
+                1. Production Incident Ingestion
+              </CardTitle>
             </div>
-          );
-        })}
-      </div>
-    </div>
+            <CardDescription className="mt-1">
+              Select an empirical production crash scenario to trigger autonomous AST correlation, RCA, and multi-channel dispatch.
+            </CardDescription>
+          </div>
+
+          <Button
+            onClick={onTrigger}
+            disabled={isRunning}
+            size="lg"
+            variant="vercel"
+            className="h-10 px-6 text-xs font-mono font-bold tracking-wider flex items-center space-x-2 shrink-0 cursor-pointer shadow-sm hover:bg-zinc-100"
+          >
+            {isRunning ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin mr-1" />
+                <span>INVESTIGATING PIPELINE...</span>
+              </>
+            ) : (
+              <>
+                <Zap className="w-3.5 h-3.5 fill-black" />
+                <span>TRIGGER SRE PIPELINE</span>
+              </>
+            )}
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-5 sm:p-6 pt-2">
+        {/* Scenario Selection Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          {presets.map((preset) => {
+            const isSelected = selectedPreset?.id === preset.id;
+            return (
+              <div
+                key={preset.id}
+                onClick={() => !isRunning && onSelectPreset(preset)}
+                className={`group rounded-lg border p-4 transition-all cursor-pointer flex flex-col justify-between relative ${
+                  isSelected
+                    ? 'border-white bg-zinc-900/90 ring-1 ring-white/20'
+                    : 'border-zinc-800/80 bg-zinc-950/60 hover:border-zinc-700 hover:bg-zinc-900/30'
+                }`}
+              >
+                {/* Active Selection Checkmark */}
+                {isSelected && (
+                  <div className="absolute top-3 right-3 flex items-center justify-center w-5 h-5 rounded-full bg-white text-black">
+                    <Check className="w-3 h-3 stroke-[3]" />
+                  </div>
+                )}
+
+                <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    {getCategoryBadge(preset.category)}
+                  </div>
+
+                  <h4 className="text-xs font-semibold text-white group-hover:text-zinc-100 line-clamp-1 pr-6">
+                    {preset.name}
+                  </h4>
+
+                  <div className="mt-1 flex items-center space-x-1.5 text-[11px] font-mono text-zinc-400">
+                    <span className="text-zinc-500 font-semibold">{preset.alert.project}</span>
+                    <span>•</span>
+                    <span className="text-rose-400 font-semibold">{preset.alert.error_type}</span>
+                  </div>
+
+                  <p className="text-[11px] text-zinc-400 mt-2 line-clamp-2 leading-relaxed">
+                    {preset.description}
+                  </p>
+                </div>
+
+                <div className="mt-3.5 pt-2.5 border-t border-zinc-800/80 flex items-center justify-between text-[11px] font-mono text-zinc-500">
+                  <span className="flex items-center gap-1 text-zinc-400">
+                    <GitCommit className="w-3 h-3 text-zinc-500" />
+                    {preset.commits_count} commits
+                  </span>
+                  <span className="text-[10px] text-zinc-500">
+                    {preset.alert.alert_id}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
