@@ -62,6 +62,32 @@ function AppContent() {
         }
       })
       .catch(() => {});
+
+    // Listen to live background Sentry webhooks permanently
+    const liveSource = new EventSource('/api/stream/live');
+    liveSource.onmessage = (e) => {
+      try {
+        const payload = JSON.parse(e.data);
+        if (payload.type === 'step') {
+          setIsRunning(true);
+          setActiveStep(payload.step);
+          setSteps((prev) => [...prev, payload]);
+        } else if (payload.type === 'result') {
+          setResult(payload.data);
+          setActiveStep('complete');
+          setIsRunning(false);
+          toast({
+            title: '🚨 Real-Time Sentry Incident Captured!',
+            description: `Autonomous investigation complete: ${payload.data.error_type} in ${payload.data.project}`,
+            variant: 'success',
+          });
+        }
+      } catch (err) {}
+    };
+
+    return () => {
+      liveSource.close();
+    };
   }, []);
 
   // Standalone simulated fallback streamer if backend stream drops

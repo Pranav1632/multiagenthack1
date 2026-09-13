@@ -70,11 +70,15 @@ async def get_presets():
         })
     return presets
 
+# Active SSE subscriber queues for real-time live browser push
+subscribers = set()
+
 @app.post("/api/webhook/sentry")
 async def sentry_webhook_listener(request: Request):
     """
     100% Autonomous Production Sentry Webhook Listener.
-    Receives live incoming Sentry alert webhooks and autonomously investigates with zero human intervention.
+    Receives live incoming Sentry alert webhooks, broadcasts live telemetry steps to all open UI tabs,
+    and autonomously investigates with zero human intervention.
     """
     try:
         raw_body = await request.json()
@@ -82,10 +86,30 @@ async def sentry_webhook_listener(request: Request):
         raw_body = {}
 
     repo = settings.GITHUB_DEFAULT_REPO
+
+    # Broadcast step updates directly to any open UI dashboard
+    async def broadcast_step(step: str, message: str):
+        event = {"type": "step", "step": step, "message": message}
+        for q in list(subscribers):
+            try:
+                await q.put(event)
+            except Exception:
+                pass
+
     result = await orchestrator.run_pipeline(
         alert_payload=raw_body,
-        repo=repo
+        repo=repo,
+        on_step_callback=broadcast_step
     )
+
+    # Broadcast final result to open UI dashboard
+    result_event = {"type": "result", "data": result.model_dump()}
+    for q in list(subscribers):
+        try:
+            await q.put(result_event)
+        except Exception:
+            pass
+
     return {
         "status": "autonomous_investigation_complete",
         "incident_id": result.incident_id,
@@ -113,6 +137,24 @@ async def trigger_incident(payload: Dict[str, Any]):
     )
     return result.model_dump()
 
+@app.get("/api/stream/live")
+async def live_incident_stream(request: Request):
+    """Permanent SSE connection for open UI dashboards to receive live webhook incidents."""
+    queue = asyncio.Queue()
+    subscribers.add(queue)
+
+    async def live_generator():
+        try:
+            while True:
+                if await request.is_disconnected():
+                    break
+                event = await queue.get()
+                yield {"event": "message", "data": json.dumps(event)}
+        finally:
+            subscribers.discard(queue)
+
+    return EventSourceResponse(live_generator())
+
 @app.get("/api/trigger/stream")
 async def trigger_incident_stream(
     request: Request, 
@@ -127,6 +169,7 @@ async def trigger_incident_stream(
 
     async def event_generator():
         event_queue = asyncio.Queue()
+        subscribers.add(event_queue)
 
         async def step_callback(step: str, message: str):
             await event_queue.put({"type": "step", "step": step, "message": message})
