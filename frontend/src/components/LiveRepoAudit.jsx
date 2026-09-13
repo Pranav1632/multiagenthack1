@@ -17,13 +17,12 @@ import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
 
 export default function LiveRepoAudit({ onTriggerAudit, isRunning }) {
-  const [repo, setRepo] = useState('Pranav1632/multiagenthack1');
-  const [errorMessage, setErrorMessage] = useState("Rollup failed to resolve import 'clsx' from 'frontend/src/lib/utils.js'");
-  const [errorFile, setErrorFile] = useState('frontend/src/lib/utils.js');
-  const [customStack, setCustomStack] = useState(`error during build:
-[vite]: Rollup failed to resolve import "clsx" from "/home/runner/work/multiagenthack1/multiagenthack1/frontend/src/lib/utils.js".
-    at viteLog (frontend/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:46504:15)
-    at handle_stripe_webhook (frontend/src/lib/utils.js:1:1)`);
+  const [repo, setRepo] = useState('Pranav1632/payment-microservice-demo');
+  const [errorMessage, setErrorMessage] = useState("TypeError: Cannot read properties of undefined (reading 'country')");
+  const [errorFile, setErrorFile] = useState('server.js');
+  const [customStack, setCustomStack] = useState(`TypeError: Cannot read properties of undefined (reading 'country')
+    at handle_stripe_webhook (server.js:38:43)
+    at Layer.handle [as handle_request] (node_modules/express/lib/router/layer.js:95:5)`);
   const [webhookCurlCopied, setWebhookCurlCopied] = useState(false);
 
   const curlCommand = `curl -X POST http://localhost:8000/api/webhook/sentry \\
