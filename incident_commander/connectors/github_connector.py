@@ -5,15 +5,23 @@ from ..config import settings
 from .base import BaseGitHubConnector
 
 class GitHubConnector(BaseGitHubConnector):
-    def __init__(self):
-        self.token = settings.GITHUB_TOKEN
-        self.live_mode = settings.LIVE_API_MODE and bool(self.token)
-        self.headers = {
+    @property
+    def token(self) -> str:
+        return settings.GITHUB_TOKEN
+
+    @property
+    def live_mode(self) -> bool:
+        return settings.LIVE_API_MODE and bool(self.token)
+
+    @property
+    def headers(self) -> dict:
+        h = {
             "Accept": "application/vnd.github.v3+json",
             "User-Agent": "IncidentCommanderAgent/1.0"
         }
         if self.token:
-            self.headers["Authorization"] = f"Bearer {self.token}"
+            h["Authorization"] = f"Bearer {self.token}"
+        return h
 
     async def get_recent_commits(
         self,

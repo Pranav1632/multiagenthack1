@@ -2,51 +2,72 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load .env file from project root
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 class Settings:
-    # Model configuration
-    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
-    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    @property
+    def OLLAMA_BASE_URL(self) -> str:
+        return os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
-    # Linear configuration
-    LINEAR_API_KEY: str = os.getenv("LINEAR_API_KEY", "")
-    LINEAR_TEAM_ID: str = os.getenv("LINEAR_TEAM_ID", "PRA")
+    @property
+    def OLLAMA_MODEL(self) -> str:
+        return os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
 
-    # Slack configuration
-    SLACK_BOT_TOKEN: str = os.getenv("SLACK_BOT_TOKEN", "")
+    @property
+    def GEMINI_API_KEY(self) -> str:
+        return os.getenv("GEMINI_API_KEY", "")
 
-    # GitHub configuration
-    GITHUB_TOKEN: str = os.getenv("GITHUB_TOKEN", "")
-    GITHUB_DEFAULT_REPO: str = os.getenv("GITHUB_DEFAULT_REPO", "owner/repo")
+    @property
+    def LINEAR_API_KEY(self) -> str:
+        return os.getenv("LINEAR_API_KEY", "")
 
-    # App flags
-    LIVE_API_MODE: bool = os.getenv("LIVE_API_MODE", "false").lower() in ("true", "1", "yes")
-    DATABASE_PATH: str = str(BASE_DIR / os.getenv("DATABASE_PATH", "data/incidents.db"))
+    @property
+    def LINEAR_TEAM_ID(self) -> str:
+        return os.getenv("LINEAR_TEAM_ID", "PRA")
 
-    @classmethod
-    def get_status(cls) -> dict:
+    @property
+    def SLACK_BOT_TOKEN(self) -> str:
+        return os.getenv("SLACK_BOT_TOKEN", "")
+
+    @property
+    def GITHUB_TOKEN(self) -> str:
+        return os.getenv("GITHUB_TOKEN", "")
+
+    @property
+    def GITHUB_DEFAULT_REPO(self) -> str:
+        return os.getenv("GITHUB_DEFAULT_REPO", "Pranav1632/multiagenthack1")
+
+    @property
+    def LIVE_API_MODE(self) -> bool:
+        return os.getenv("LIVE_API_MODE", "false").lower() in ("true", "1", "yes")
+
+    @property
+    def DATABASE_PATH(self) -> str:
+        return str(BASE_DIR / os.getenv("DATABASE_PATH", "data/incidents.db"))
+
+    def reload(self):
+        load_dotenv(BASE_DIR / ".env", override=True)
+
+    def get_status(self) -> dict:
         return {
             "ollama": {
-                "base_url": cls.OLLAMA_BASE_URL,
-                "model": cls.OLLAMA_MODEL,
-                "available": True  # Will be verified dynamically
+                "base_url": self.OLLAMA_BASE_URL,
+                "model": self.OLLAMA_MODEL,
+                "available": True
             },
             "github": {
-                "configured": bool(cls.GITHUB_TOKEN),
-                "live_mode": cls.LIVE_API_MODE and bool(cls.GITHUB_TOKEN)
+                "configured": bool(self.GITHUB_TOKEN),
+                "live_mode": self.LIVE_API_MODE and bool(self.GITHUB_TOKEN)
             },
             "slack": {
-                "configured": bool(cls.SLACK_BOT_TOKEN),
-                "live_mode": cls.LIVE_API_MODE and bool(cls.SLACK_BOT_TOKEN)
+                "configured": bool(self.SLACK_BOT_TOKEN),
+                "live_mode": self.LIVE_API_MODE and bool(self.SLACK_BOT_TOKEN)
             },
             "linear": {
-                "configured": bool(cls.LINEAR_API_KEY),
-                "team_id": cls.LINEAR_TEAM_ID,
-                "live_mode": cls.LIVE_API_MODE and bool(cls.LINEAR_API_KEY)
+                "configured": bool(self.LINEAR_API_KEY),
+                "team_id": self.LINEAR_TEAM_ID,
+                "live_mode": self.LIVE_API_MODE and bool(self.LINEAR_API_KEY)
             }
         }
 

@@ -6,11 +6,19 @@ from ..config import settings
 from .base import BaseLinearConnector
 
 class LinearConnector(BaseLinearConnector):
-    def __init__(self):
-        self.api_key = settings.LINEAR_API_KEY
-        self.team_key = settings.LINEAR_TEAM_ID or "PRA"
-        self.live_mode = settings.LIVE_API_MODE and bool(self.api_key)
-        self.endpoint = "https://api.linear.app/graphql"
+    endpoint = "https://api.linear.app/graphql"
+
+    @property
+    def api_key(self) -> str:
+        return settings.LINEAR_API_KEY
+
+    @property
+    def team_key(self) -> str:
+        return settings.LINEAR_TEAM_ID or "PRA"
+
+    @property
+    def live_mode(self) -> bool:
+        return settings.LIVE_API_MODE and bool(self.api_key)
 
     def format_ticket_body(
         self,

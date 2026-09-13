@@ -7,9 +7,13 @@ from ..config import settings
 from .base import BaseSlackConnector
 
 class SlackConnector(BaseSlackConnector):
-    def __init__(self):
-        self.token = settings.SLACK_BOT_TOKEN
-        self.live_mode = settings.LIVE_API_MODE and bool(self.token)
+    @property
+    def token(self) -> str:
+        return settings.SLACK_BOT_TOKEN
+
+    @property
+    def live_mode(self) -> bool:
+        return settings.LIVE_API_MODE and bool(self.token)
 
     def generate_channel_name(self, service: str) -> str:
         date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
