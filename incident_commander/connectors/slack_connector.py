@@ -15,10 +15,36 @@ class SlackConnector(BaseSlackConnector):
     def live_mode(self) -> bool:
         return settings.LIVE_API_MODE and bool(self.token)
 
-    def generate_channel_name(self, service: str) -> str:
-        date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
-        clean_service = re.sub(r"[^a-zA-Z0-9-]", "-", service.lower()).strip("-")[:25]
-        return f"incident-{date_str}-{clean_service}"
+    _cached_team_id: Optional[str] = None
+    _cached_team_domain: Optional[str] = None
+
+    async def get_team_info(self, client: httpx.AsyncClient) -> tuple[str, str]:
+        if self._cached_team_id and self._cached_team_domain:
+            return self._cached_team_id, self._cached_team_domain
+        try:
+            auth_resp = await client.post(
+                "https://slack.com/api/auth.test",
+                headers={"Authorization": f"Bearer {self.token}"}
+            )
+            if auth_resp.status_code == 200:
+                data = auth_resp.json()
+                if data.get("ok"):
+                    self._cached_team_id = data.get("team_id", "T0C2BU9S40Y")
+                    url = data.get("url", "")
+                    domain = url.replace("https://", "").replace(".slack.com/", "").strip()
+                    self._cached_team_domain = domain or "incident-app"
+                    return self._cached_team_id, self._cached_team_domain
+        except Exception:
+            pass
+        return "T0C2BU9S40Y", "incident-app"
+
+    def generate_channel_name(self, service: str, alert_id: Optional[str] = None) -> str:
+        date_str = datetime.now(timezone.utc).strftime("%m%d")
+        clean_service = re.sub(r"[^a-zA-Z0-9-]", "-", service.lower()).strip("-")[:14]
+        # Include short unique suffix to avoid name_taken collisions
+        import uuid
+        suffix = alert_id[-4:] if alert_id else uuid.uuid4().hex[:4]
+        return f"inc-{date_str}-{clean_service}-{suffix}".lower()
 
     def build_block_kit(
         self,
@@ -113,7 +139,7 @@ class SlackConnector(BaseSlackConnector):
         hypothesis: RootCauseHypothesis,
         linear_ticket: Optional[LinearTicketOutput] = None
     ) -> SlackCardOutput:
-        channel_name = self.generate_channel_name(service)
+        channel_name = self.generate_channel_name(service, alert.alert_id)
         blocks = self.build_block_kit(service, alert, hypothesis, linear_ticket)
 
         if self.live_mode and self.token:
@@ -122,6 +148,8 @@ class SlackConnector(BaseSlackConnector):
                 "Content-Type": "application/json; charset=utf-8"
             }
             async with httpx.AsyncClient(timeout=10.0) as client:
+                team_id, domain = await self.get_team_info(client)
+
                 # 1. Create channel
                 channel_id = ""
                 create_resp = await client.post(
@@ -133,13 +161,17 @@ class SlackConnector(BaseSlackConnector):
                 if create_data.get("ok"):
                     channel_id = create_data["channel"]["id"]
                 elif create_data.get("error") == "name_taken":
-                    # Channel already exists, lookup ID
-                    list_resp = await client.get("https://slack.com/api/conversations.list?types=public_channel", headers=headers)
-                    if list_resp.status_code == 200:
-                        for ch in list_resp.json().get("channels", []):
-                            if ch.get("name") == channel_name:
-                                channel_id = ch.get("id")
-                                break
+                    # If duplicate name, append random hash
+                    import uuid
+                    retry_name = f"{channel_name[:15]}-{uuid.uuid4().hex[:4]}"
+                    retry_resp = await client.post(
+                        "https://slack.com/api/conversations.create",
+                        headers=headers,
+                        json={"name": retry_name, "is_private": False}
+                    )
+                    if retry_resp.json().get("ok"):
+                        channel_name = retry_name
+                        channel_id = retry_resp.json()["channel"]["id"]
 
                 # 2. Post message
                 if channel_id:
@@ -156,18 +188,23 @@ class SlackConnector(BaseSlackConnector):
                     msg_ts = post_data.get("ts")
                     if msg_ts:
                         # 3. Pin message
-                        await client.post(
-                            "https://slack.com/api/pins.add",
-                            headers=headers,
-                            json={"channel": channel_id, "timestamp": msg_ts}
-                        )
+                        try:
+                            await client.post(
+                                "https://slack.com/api/pins.add",
+                                headers=headers,
+                                json={"channel": channel_id, "timestamp": msg_ts}
+                            )
+                        except Exception:
+                            pass
 
+                    # Direct link to channel in user's workspace
+                    direct_url = f"https://app.slack.com/client/{team_id}/{channel_id}"
                     return SlackCardOutput(
                         channel_id=channel_id,
                         channel_name=f"#{channel_name}",
                         message_ts=msg_ts,
                         blocks=blocks,
-                        web_url=f"https://slack.com/app_redirect?channel={channel_id}",
+                        web_url=direct_url,
                         is_live=True
                     )
 
@@ -178,7 +215,7 @@ class SlackConnector(BaseSlackConnector):
             channel_name=f"#{channel_name}",
             message_ts=f"{int(datetime.now(timezone.utc).timestamp())}.000100",
             blocks=blocks,
-            web_url=f"https://app.slack.com/client/T00000000/{sim_id}",
+            web_url=f"https://app.slack.com/client/T0C2BU9S40Y/{sim_id}",
             is_live=False
         )
 

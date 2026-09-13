@@ -47,15 +47,26 @@ export default function SlackPreview({ slack, onActionClick }) {
           </div>
 
           {slack.web_url && (
-            <a
-              href={slack.web_url}
-              target="_blank"
-              rel="noreferrer"
-              className="text-xs font-mono text-zinc-400 hover:text-white flex items-center gap-1 hover:underline"
-            >
-              <span>Open in Slack</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
+            <div className="flex items-center space-x-2">
+              <a
+                href={slack.web_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-2.5 py-1 rounded bg-emerald-950/50 border border-emerald-700/80 text-emerald-300 hover:bg-emerald-900/60 text-xs font-mono font-semibold flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <span>Open in Slack</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+              {slack.channel_id && (
+                <a
+                  href={`slack://channel?team=T0C2BU9S40Y&id=${slack.channel_id}`}
+                  className="px-2 py-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white text-xs font-mono transition"
+                  title="Open directly in Slack Desktop App"
+                >
+                  App ↗
+                </a>
+              )}
+            </div>
           )}
         </div>
       </CardHeader>

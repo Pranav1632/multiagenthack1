@@ -1,4 +1,5 @@
 import json
+import time
 import httpx
 from typing import List, Optional
 from ..types import SentryAlert, CandidateScore, GitCommit, RootCauseHypothesis
@@ -124,6 +125,7 @@ Respond ONLY in valid JSON matching this schema:
     ) -> RootCauseHypothesis:
         """Query local Qwen 2.5 via Ollama, falling back to deterministic engine on timeout."""
         t0 = time.time()
+        prompt = self.build_prompt(alert, top_candidates, commits_map)
         try:
             async with httpx.AsyncClient(timeout=3.5) as client:
                 resp = await client.post(
