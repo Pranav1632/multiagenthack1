@@ -4,60 +4,79 @@
 
 ---
 
-## 1. Executive Summary
+## 1. Executive Summary & App Classification
 
-When critical production errors spike, engineering teams typically waste **45+ minutes** manually reading stack traces, guessing which commit broke production, arguing in Slack, and drafting issue tickets from scratch.
-
-**Incident Commander Agent** cuts this response time from **~45 minutes down to 3 seconds**:
-1. **Alert Ingestion**: Ingests Sentry/PagerDuty error payloads and normalizes stack frames.
-2. **Hybrid Correlation Engine**: Prunes candidate commits in **40ms** using time-decay decay math and call-stack AST matching, then uses **Local Qwen 2.5 (3B)** to pinpoint the exact root-cause commit with line-level evidence.
-3. **The "Don't Guess" Calibration Guard**: If an error is caused by an external cloud outage (e.g. AWS RDS down), it detects that zero code commits correlate, caps confidence at **<35%**, and **suppresses dangerous code rollbacks**.
-4. **Multi-App Orchestration**:
-   - Creates a dedicated **Slack** incident channel (`#incident-YYYYMMDD-<service>`) and posts rich BlockKit briefing cards.
-   - Files a pre-filled **Linear** ticket under team **`PRA`** (P0 Urgent) with root cause hypothesis, impact, and rollback command (`git revert <sha>`).
-   - Auto-generates a surgical unified diff hotfix patch and opens a **GitHub Pull Request**.
+- **What Type of App is This?**
+  - **Classification**: **Distributed Event-Driven AI SRE Agent System** featuring a headless autonomous core, a webhook ingestion gateway, a LangGraph cyclical state-machine, and an interactive Cybernetic Mission Control dashboard.
+  - **Scale Profile**:
+    - **Control Plane**: Fast asynchronous FastAPI service with Server-Sent Events (SSE) streaming and SQLite telemetry. Can run as a Kubernetes sidecar daemon or cloud microservice.
+    - **Data Plane**: Webhook receiver capable of handling bursty alert traffic from Sentry, PagerDuty, or Datadog.
+    - **Inference Layer**: Pluggable neuro-symbolic engine—runs zero-cost local Ollama `qwen2.5:3b` by default, or cloud LLMs via standard `.env`.
+- **Response Time Improvement**: Cuts incident triage and dispatch time from **~45 minutes down to 3 seconds**.
 
 ---
 
-## 2. Architecture
+## 2. Multi-Agent & LangGraph Architecture
 
-```
-Alert (Simulated Sentry/PagerDuty Event)
-                    │
-                    ▼
-[1] Context Gatherer (sentry_parser.py)
-    - Extracts error type, message, and innermost crash frame
-    - Normalizes container paths (/app/services/payments/webhook.py → relative repo path)
-    - Pulls candidate commits within lookback window (GitHub REST API)
-                    │
-                    ▼
-[2] Hybrid Correlation Engine (The Core Differentiator)
-    - Phase A (40ms): Time Decay Math + Stack Frame Overlap + Diff Line Proximity
-    - Phase B: Local Qwen 2.5 Reasoner (Ollama JSON Mode) for semantic diff analysis
-    - Phase C: "Don't Guess" Calibration Guard (Reliability 25% Metric)
-                    │
-                    ▼
-[3] Multi-App Response Orchestration
-    ├─ Slack: Creates #incident-YYYYMMDD-<service> & posts BlockKit card
-    ├─ Linear: Files P0 issue under team PRA with hypothesis & rollback command
-    └─ GitHub: Generates branch hotfix/incident-... & opens 1-click Pull Request
+The system coordinates between deterministic symbolics and neural reasoning via a compiled **LangGraph Cyclic State Machine**:
+
+```mermaid
+graph TD
+    START([Production Alert Ingested]) --> Ingest[Node 1: sentry_parser<br>Normalize AST Stack Frames]
+    Ingest --> Gather[Node 2: github_connector<br>Retrieve Lookback Commits]
+    Gather --> Reason[Node 3: qwen_reasoner<br>Hybrid Scoring & Local LLM]
+    Reason --> Route{Confidence Gate & Outage Check}
+    Route -- Confidence < 0.65 OR Cloud Outage --> Escalate[Node 4A: Escalate to Human<br>Suppress Code Rollback & Alert Slack]
+    Route -- Confidence >= 0.65 --> Dispatch[Node 4B: Dispatch War-Room<br>Slack Channel + Linear P0 Ticket]
+    Dispatch --> Hotfix[Node 5: Phase 2 Hotfix Automation<br>GitHub Surgical Revert PR]
+    Escalate --> END([Incident Tracked])
+    Hotfix --> END([Auto-Heal Ready])
 ```
 
 ---
 
-## 3. Judging Criteria Alignment
+## 3. Model Context Protocol (MCP) Integration
+
+Incident Commander exposes a native Model Context Protocol (MCP) server under `incident_commander/mcp/server.py`.
+
+Any MCP-compliant client (Antigravity, Claude Code, Cursor, Windsurf) can connect and invoke the agent:
+
+| MCP Tool Name | Description | Parameters |
+|---|---|---|
+| `investigate_incident` | Correlates production error against git commits using Qwen 2.5. | `scenario_id`, `repo` |
+| `run_langgraph_incident` | Executes the investigation across the LangGraph state machine with safety guards. | `scenario_id` |
+| `create_hotfix_pr` | Opens a Phase 2 surgical hotfix pull request on GitHub. | `repo`, `culprit_sha`, `title` |
+
+---
+
+## 4. Phase 1 vs Phase 2: Autonomous Auto-Heal
+
+- **Phase 1 (Complete)**:
+  - Ingestion from Sentry webhooks / fixtures.
+  - 40ms Algorithmic candidate pruning (time-decay, call stack overlap, line proximity).
+  - Local Qwen 2.5 semantic diff reasoning.
+  - "Don't Guess" Calibration Guard preventing false rollbacks.
+  - Slack war-room creation (`incident-app.slack.com`) & Linear P0 issue creation (Team `PRA`).
+- **Phase 2 (Auto-Heal)**:
+  - Automated GitHub PR generation (`/api/hotfix/create-pr`).
+  - Pre-flight sandbox verification.
+  - Slack interactive action callbacks for 1-click human merge approval.
+
+---
+
+## 5. Judging Criteria Alignment
 
 | Criterion (Weight) | How Incident Commander Wins 1st Prize |
 |---|---|
-| **Technical Execution (30%)** | Hybrid Neuro-Symbolic architecture: 40ms deterministic pruning filter + Local Qwen 2.5 structured JSON reasoning. Multi-app coordination across GitHub, Slack, and Linear. |
+| **Technical Execution (30%)** | Hybrid Neuro-Symbolic architecture + LangGraph state machine with conditional routing. Multi-app coordination across GitHub, Slack, and Linear. |
 | **Reliability & Evaluation (25%)** | 4-scenario benchmark suite with ground truth. Demonstrates **100% Top-1 Accuracy**, **MRR 1.00**, and the **"Don't Guess" Calibration Guard** preventing false rollbacks during external outages. |
 | **Usefulness (20%)** | Solves a universal, multi-billion-dollar engineering pain point. Response time drops from 45 min to under 3 seconds. |
-| **Originality (15%)** | Not an alert-forwarding bot. Active root-cause correlation, auto-generated surgical fix diffs, and 1-click GitHub Pull Requests. |
+| **Originality (15%)** | Active root-cause correlation, native LangGraph DAG execution, FastMCP tool integration, and surgical fix diffs. |
 | **Demo Clarity (10%)** | Cybernetic Mission Control Room with real-time SSE execution timeline, live Slack & Linear previews, and 1-click live benchmark modal. |
 
 ---
 
-## 4. Quickstart Guide
+## 6. Quickstart Guide
 
 ### Prerequisites
 - Python 3.10+
@@ -77,8 +96,14 @@ Open **`http://localhost:5173`** in your browser!
 
 ---
 
-## 5. Automated Benchmark Suite (Terminal Run)
+## 7. Automated Benchmark & Test Suite
 
+Run all 11 unit, integration, and LangGraph tests:
+```bash
+python -m pytest tests/ -v
+```
+
+Run the official evaluation benchmark (25% hackathon judging criterion):
 ```bash
 python -m incident_commander.eval.runner
 ```
@@ -106,10 +131,10 @@ outage and refrained from hallucinating an innocent code rollback.
 
 ---
 
-## 6. Winning 2-Minute Demo Script
+## 8. Winning 2-Minute Demo Script
 
 - **0:00 - 0:25**: Hook: *"When an error spikes in production, teams waste 45 minutes guessing commits and typing Slack updates. Incident Commander automates root-cause investigation in 3 seconds."*
 - **0:25 - 0:55**: Click **`Trigger: Payment KeyError`**. Show the live real-time pipeline trace: Sentry parsed -> 40ms commit pruning -> Local Qwen 2.5 semantic diff analysis -> Slack incident channel & Linear issue created.
 - **0:55 - 1:20**: Point out the pre-filled Linear ticket under team **`PRA`**, the Slack BlockKit card, and the auto-generated surgical patch.
-- **1:20 - 1:45**: **The Showstopper (Reliability)**: Click **`Trigger: AWS RDS Outage`**. Show the agent outputting **"Confidence: 18% (Low) — Probable external infrastructure outage. Suppressing automated code rollback."** Explain how this prevents false rollbacks in enterprise production.
+- **1:20 - 1:45**: **The Showstopper (Reliability)**: Click **`Trigger: AWS RDS Outage`**. Show the LangGraph condition branch: **"Confidence: 18% (Low) — Probable external infrastructure outage. Suppressing automated code rollback."** Explain how this prevents catastrophic false rollbacks in production.
 - **1:45 - 2:00**: Click **`Eval Benchmark`**. Show the 4/4 passed scorecard (100% Top-1 accuracy) live on screen!
