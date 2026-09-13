@@ -16,7 +16,31 @@
 
 ---
 
+## 📸 Production Live System Screenshots
+
+> **Real-World Live System Verification**: The following screenshots demonstrate our end-to-end multi-app incident resolution in action across Sentry Cloud, Cybernetic Mission Control, Slack, and Linear with zero button clicks.
+
+### 1. 🖥️ Cybernetic Mission Control Dashboard
+*Live SRE Mission Control capturing the production crash in `payment-microservice-demo`, displaying 4.2s MTTC (-82% vs Human), AST overlap confidence, 3-node blast radius, and active incident banner.*
+![Cybernetic Mission Control Dashboard](docs/images/01_dashboard.png)
+
+### 2. 🚨 Live Sentry Cloud Ingestion
+*Genuine production `TypeError: Cannot read properties of undefined (reading 'country')` caught by the official Sentry SDK on `POST /api/webhook/stripe` and forwarded to Incident Commander.*
+![Live Sentry Cloud Ingestion](docs/images/02_sentry_cloud.png)
+
+### 3. 💬 Automated Slack War-Room Orchestration
+*Dynamic incident channel `#inc-0913-2250-payment-micr-229` created on `incident-app.slack.com` with pinned BlockKit cards, root-cause hypothesis (commit `539fce1`), falsifiable evidence, and 1-click mitigation actions.*
+![Automated Slack War-Room Orchestration](docs/images/03_slack_war_room.png)
+
+### 4. 📋 Linear P0 Incident Ticket Dispatch
+*Actionable P0 Urgent issue automatically filed under team `PRA` in the `pranav1632` workspace, containing full diagnostic stack frames, root-cause attribution, and automated `git revert 539fce1 -m 1` remediation command.*
+![Linear P0 Incident Ticket Dispatch](docs/images/04_linear_ticket.png)
+
+---
+
 ## 📑 Table of Contents
+
+- [Live Production Interface Screenshots](#-production-live-system-screenshots)
 
 1. [The Story: The Problem & What We Solved](#1-the-story-the-problem--what-we-solved)
    - [The 3:00 AM Production Nightmare](#the-300-am-production-nightmare)
