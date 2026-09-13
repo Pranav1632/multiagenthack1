@@ -71,12 +71,10 @@
    - [Quantitative Metrics & Scorecard](#quantitative-metrics--scorecard)
    - [Running Automated Benchmarks & Tests](#running-automated-benchmarks--tests)
    - [Calibration Proof: External Outage Protection](#calibration-proof-external-outage-protection)
-10. [Official Hackathon Judging Criteria Alignment](#10-official-hackathon-judging-criteria-alignment)
-11. [Complete Demonstration Scripts for Judges & Video Pitch](#11-complete-demonstration-scripts-for-judges--video-pitch)
+10. [Complete Demonstration Scripts for Judges & Video Pitch](#10-complete-demonstration-scripts-for-judges--video-pitch)
     - [Option A: High-Energy 2-Minute Solo Pitch Script](#option-a-high-energy-2-minute-solo-pitch-script)
     - [Option B: Two-Person Live Video Demo Script (Developer POV vs AI SRE Agent POV)](#option-b-two-person-live-video-demo-script-developer-pov-vs-ai-sre-agent-pov)
-    - [Option C: Live Real Audit Demonstration (Real GitHub Repo & Live Sentry Webhook)](#option-c-live-real-audit-demonstration-real-github-repo--live-sentry-webhook)
-12. [Future Scopes & Technical Feasibility](#12-future-scopes--technical-feasibility)
+11. [Future Scopes & Technical Feasibility](#11-future-scopes--technical-feasibility)
     - [Technical & Economic Feasibility Analysis](#technical--economic-feasibility-analysis)
     - [Zero-Egress Security & Enterprise Compliance](#zero-egress-security--enterprise-compliance)
     - [Multi-Phase Product Roadmap (Phases 3 to 6)](#multi-phase-product-roadmap-phases-3-to-6)
@@ -962,19 +960,7 @@ Scenario #4 deliberately simulates an AWS RDS database failure where zero code c
 
 ---
 
-## 10. Official Hackathon Judging Criteria Alignment
-
-| Criterion (Weight) | How Incident Commander Wins 1st Prize |
-|---|---|
-| **Technical Execution (30%)** | Hybrid Neuro-Symbolic architecture + LangGraph state machine with conditional routing. Multi-app coordination across GitHub, Slack, and Linear. Clean separation of control plane (FastAPI) and inference layer (local Qwen 2.5). |
-| **Reliability & Evaluation (25%)** | 5-scenario benchmark suite with ground truth. Demonstrates **100% Top-1 Accuracy**, **MRR 1.000**, and the **"Don't Guess" Calibration Guard** preventing false rollbacks during external outages. |
-| **Usefulness (20%)** | Solves a universal, multi-billion-dollar engineering pain point. Response time drops from 45 minutes to under 3 seconds. Zero token costs and 100% on-prem data privacy. |
-| **Originality (15%)** | Active root-cause correlation, native LangGraph DAG execution, FastMCP tool integration, and surgical fix diffs. |
-| **Demo Clarity (10%)** | Cybernetic Mission Control Room with real-time SSE execution timeline, live Slack & Linear previews, and 1-click live benchmark modal. |
-
----
-
-## 11. Complete Demonstration Scripts for Judges & Video Pitch
+## 10. Complete Demonstration Scripts for Judges & Video Pitch
 
 ### Option A: High-Energy 2-Minute Solo Pitch Script
 
@@ -1085,19 +1071,7 @@ Demonstrates **Incident Commander** from two distinct human perspectives:
 
 ---
 
-### Option C: Live Real Audit Demonstration (Real GitHub Repo & Live Sentry Webhook)
-
-Use this demonstration script when recording a pitch video highlighting genuine production API audits:
-
-1. **0:00 - 0:30 (Hook)**: *"Engineering teams lose 45 minutes every production crash manually correlating logs and git commits. Incident Commander cuts this to 3 seconds with calibrated neuro-symbolic reasoning."*
-2. **0:30 - 1:15 (The Real Audit Tab)**: Navigate to the **🔴 Live Repo & Sentry Audit** tab. Point out the real GitHub repository (`Pranav1632/multiagenthack1`). Click **Trigger Live Investigation**. Show the terminal fetching real commits directly from GitHub REST API!
-3. **1:15 - 1:45 (Multi-App Dispatch)**: Show the newly created Slack channel on `incident-app.slack.com` with real BlockKit cards and the live Linear P0 issue under team `PRA`.
-4. **1:45 - 2:15 (The Calibration Guard)**: Switch to the RDS Outage scenario. Show the system diagnosing **18% confidence — External cloud outage**, proactively refusing to rollback code.
-5. **2:15 - 2:30 (Evaluation Benchmark)**: Open the **Benchmarks** modal. Show the 100% Top-1 accuracy and MRR 1.000 live on screen!
-
----
-
-## 12. Future Scopes & Technical Feasibility
+## 11. Future Scopes & Technical Feasibility
 
 ### Technical & Economic Feasibility Analysis
 
