@@ -27,6 +27,10 @@ class Settings:
         return os.getenv("LINEAR_TEAM_ID", "PRA")
 
     @property
+    def LINEAR_WORKSPACE(self) -> str:
+        return os.getenv("LINEAR_WORKSPACE", "pranav1632")
+
+    @property
     def SLACK_BOT_TOKEN(self) -> str:
         return os.getenv("SLACK_BOT_TOKEN", "")
 

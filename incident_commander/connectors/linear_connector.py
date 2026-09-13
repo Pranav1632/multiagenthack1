@@ -85,7 +85,7 @@ git push origin main
                 "Authorization": self.api_key,
                 "Content-Type": "application/json"
             }
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with httpx.AsyncClient(timeout=20.0) as client:
                 try:
                     # 1. Fetch team ID for key (e.g. PRA)
                     team_query = """
@@ -147,18 +147,18 @@ git push origin main
                                     body_markdown=body,
                                     is_live=True
                                 )
-                except Exception:
-                    # Seamless fallback to sandbox preview if API fails
-                    pass
+                except Exception as e:
+                    print(f"[-] [LINEAR ERROR] Exception creating live ticket: {e}")
 
         # Fallback / Virtual Sandbox Mode
         ticket_num = abs(hash(alert.alert_id)) % 900 + 100
         ticket_key = f"{self.team_key}-{ticket_num}"
+        workspace = getattr(settings, "LINEAR_WORKSPACE", "pranav1632")
         return LinearTicketOutput(
             ticket_id=f"lin-{uuid.uuid4().hex[:8]}",
             ticket_key=ticket_key,
             title=title,
-            url=f"https://linear.app/{self.team_key.lower()}/issue/{ticket_key}",
+            url=f"https://linear.app/{workspace}/issue/{ticket_key}",
             priority=1,
             body_markdown=body,
             is_live=False
