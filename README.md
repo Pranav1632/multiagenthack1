@@ -292,9 +292,9 @@ The agent creates a new git branch (`hotfix/revert-<sha>`), pushes the surgical 
 
 ```mermaid
 graph TB
-    subgraph Clients["External Ingestion & Clients"]
-        Prod["Production Microservices"]
-        DevIDEs["Developer Workstations / IDEs<br>(Antigravity, Cursor, Claude Code)"]
+    subgraph Clients["External Clients & Ingestion"]
+        Prod["Production Microservices<br>(Sentry SDK)"]
+        DevIDEs["Developer Workstations / IDEs<br>(Antigravity / Cursor / Claude Code)"]
     end
 
     subgraph Gateway["FastAPI Gateway / Control Plane (:8000)"]
@@ -372,58 +372,6 @@ graph TB
     Gateway -->|Live Telemetry Events| SSEStream
     SSEStream -->|Server-Sent Events| CyberDashboard
     StaticUI --> CyberDashboard
-```
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    INCIDENT COMMANDER COMPONENT TOPOLOGY                    │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   [Production Services]        [Developer Workstations / IDEs]              │
-│            │                                  │                             │
-│            ▼ (Sentry Webhook)                 ▼ (MCP Protocol)              │
-│   ┌─────────────────────────────────────────────────────────────────────┐   │
-│   │               FASTAPI GATEWAY / CONTROL PLANE (:8000)                │   │
-│   │  • /api/webhook/sentry           • /api/status                      │   │
-│   │  • /api/incidents/stream (SSE)   • /api/hotfix/create-pr            │   │
-│   │  • FastMCP Server Module         • Static UI Server (/frontend/dist)│   │
-│   └──────────────────┬─────────────────────────────────┬────────────────┘   │
-│                      │                                 │                    │
-│                      ▼                                 ▼                    │
-│   ┌───────────────────────────────────────┐ ┌───────────────────────────┐   │
-│   │       LANGGRAPH CYCLICAL ENGINE       │ │   SQLITE AUDIT STORE      │   │
-│   │   Ingest -> Gather -> Reason          │ │   data/incidents.db       │   │
-│   │       -> Confidence Route             │ │   • Incident histories    │   │
-│   │       -> Dispatch -> Hotfix PR        │ │   • Eval telemetry        │   │
-│   └──────────────────┬────────────────────┘ └───────────────────────────┘   │
-│                      │                                                      │
-│      ┌───────────────┼───────────────────────────────┐                      │
-│      ▼               ▼                               ▼                      │
-│ ┌──────────┐ ┌────────────────────────────┐ ┌─────────────────────────────┐ │
-│ │ Sentry   │ │   GITHUB REST CONNECTOR    │ │   NEURO-SYMBOLIC SCORER     │ │
-│ │ Parser   │ │ • Commit harvesting        │ │ • 40ms Algorithmic filter   │ │
-│ │ AST Clean│ │ • Unified diff extraction  │ │ • Exponential time decay    │ │
-│ └──────────┘ │ • Hotfix PR creation       │ │ • Jaccard stack path overlap│ │
-│              └────────────────────────────┘ │ • AST line proximity        │ │
-│                                             └──────────────┬──────────────┘ │
-│                                                            │                │
-│                                                            ▼                │
-│ ┌─────────────────────────────────────────┐ ┌─────────────────────────────┐ │
-│ │     LOCAL QWEN 2.5 REASONER (3B)        │ │  "DON'T GUESS" CALIBRATION  │ │
-│ │ • Runs on Ollama (localhost:11434)      │ │            GUARD            │ │
-│ │ • Structured JSON schema extraction     │ │ • Threshold: score >= 0.28  │ │
-│ │ • 100% on-prem / Zero code leakage      │ │ • Suppresses false rollbacks│ │
-│ └────────────────────┬────────────────────┘ └──────────────┬──────────────┘ │
-│                      │                                     │                │
-│                      ▼                                     ▼                │
-│ ┌─────────────────────────────────────────────────────────────────────────┐ │
-│ │                 MULTI-APP ORCHESTRATION LAYER                           │ │
-│ │  • SLACK: Dynamic team discovery, #inc-* war-rooms, BlockKit cards      │ │
-│ │  • LINEAR: GraphQL P0 tickets under team PRA with revert instructions   │ │
-│ └─────────────────────────────────────────────────────────────────────────┘ │
-│                                                                             │
-│   [Cybernetic Mission Control Web Dashboard: React + Vite + Tailwind CSS]   │
-└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
