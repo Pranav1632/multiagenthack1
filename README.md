@@ -290,6 +290,90 @@ The agent creates a new git branch (`hotfix/revert-<sha>`), pushes the surgical 
 
 ### System Topology & Component Diagram
 
+```mermaid
+graph TB
+    subgraph Clients["External Ingestion & Clients"]
+        Prod["Production Microservices"]
+        DevIDEs["Developer Workstations / IDEs<br>(Antigravity, Cursor, Claude Code)"]
+    end
+
+    subgraph Gateway["FastAPI Gateway / Control Plane (:8000)"]
+        direction TB
+        Webhook["POST /api/webhook/sentry"]
+        SSEStream["GET /api/stream/live (SSE)"]
+        MCPServer["FastMCP Server (JSON-RPC)"]
+        HotfixEndpoint["POST /api/hotfix/create-pr"]
+        StaticUI["Static UI Server (/frontend/dist)"]
+    end
+
+    subgraph StateMachine["LangGraph Cyclical State Machine"]
+        direction TB
+        NodeIngest["node_ingest<br>Path normalization & frame isolation"]
+        NodeGather["node_gather<br>GitHub candidate commits lookback"]
+        NodeReason["node_reason<br>40ms Scoring & Qwen 2.5 LLM"]
+        RouteCond{"route_by_confidence<br>tau >= 0.65?"}
+        NodeDispatch["node_dispatch<br>Slack War-Room & Linear P0"]
+        NodeHotfix["node_hotfix<br>1-Click Hotfix Branch & PR"]
+        NodeEscalate["node_escalate_human<br>Outage Alert & Suppress Rollback"]
+    end
+
+    subgraph Engine["Neuro-Symbolic Correlation Engine"]
+        Scorer["40ms Algorithmic Scorer<br>exp(-0.02*dt) + Jaccard + Line Proximity"]
+        CalibrationGuard["Don't Guess Calibration Guard<br>(Cutoff tau >= 0.28)"]
+        LLMReasoner["Local Qwen 2.5 Reasoner (3B)<br>via Ollama (format: json, temp: 0.1)"]
+    end
+
+    subgraph Connectors["Multi-App Integration Connectors"]
+        SentryConn["Sentry Parser<br>AST container normalization"]
+        GHConn["GitHub REST Connector<br>Commit diffs & PR creation"]
+        SlackConn["Slack Connector<br>Dynamic #inc-* channels & BlockKit"]
+        LinearConn["Linear Connector<br>GraphQL P0 tickets under PRA"]
+    end
+
+    subgraph Storage["Telemetry & Persistence Layer"]
+        SQLiteDB[("SQLite Audit Store<br>data/incidents.db")]
+    end
+
+    subgraph Dashboard["Frontend Client"]
+        CyberDashboard["Cybernetic Mission Control<br>(React + Tailwind + Lucide)"]
+    end
+
+    Prod -->|Sentry Webhook| Webhook
+    DevIDEs -->|stdio JSON-RPC| MCPServer
+    Webhook --> NodeIngest
+    MCPServer --> NodeIngest
+
+    NodeIngest --> SentryConn
+    NodeIngest --> NodeGather
+    NodeGather --> GHConn
+    NodeGather --> NodeReason
+
+    NodeReason --> Scorer
+    Scorer --> CalibrationGuard
+    CalibrationGuard -->|Score >= 0.28| LLMReasoner
+    CalibrationGuard -->|Score < 0.28| NodeReason
+    LLMReasoner --> NodeReason
+
+    NodeReason --> RouteCond
+    RouteCond -->|Confidence >= 0.65 & Code Bug| NodeDispatch
+    RouteCond -->|Confidence < 0.65 OR Infra Outage| NodeEscalate
+
+    NodeDispatch --> SlackConn
+    NodeDispatch --> LinearConn
+    NodeDispatch --> NodeHotfix
+    NodeHotfix --> GHConn
+    NodeEscalate --> SlackConn
+    NodeEscalate --> LinearConn
+
+    NodeDispatch -.->|Log incident| SQLiteDB
+    NodeEscalate -.->|Log incident| SQLiteDB
+    HotfixEndpoint --> GHConn
+
+    Gateway -->|Live Telemetry Events| SSEStream
+    SSEStream -->|Server-Sent Events| CyberDashboard
+    StaticUI --> CyberDashboard
+```
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                    INCIDENT COMMANDER COMPONENT TOPOLOGY                    │
